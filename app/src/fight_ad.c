@@ -16,7 +16,8 @@ typedef enum {
     FC_MOVE_1,
     FC_MOVE_2,
     FC_MOVE_3,
-    FC_FLEE     = 0xFF
+    FC_FLEE     = 0xFF,
+    FC_DONE     = 0xD0
 } FightCommand;
 
 uint8_t fightAdData[] = {

@@ -23,3 +23,13 @@
 Ibtisam Aslam - 46476470  
 Emily Good - 47453311  
 Sioryn Willett - 43926200  
+
+## Install
+```shell
+$ west build -b m5stack_core2/esp32/procpu app -p
+$ west flash
+```
+
+## Dependencies
+- [Zephyr/West](https://docs.zephyrproject.org/latest/develop/getting_started/index.html)
+- `$ pip install asyncio pykwalify pyserial requests numpy pyyaml`
