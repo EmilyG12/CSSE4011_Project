@@ -13,6 +13,8 @@
 ├── app # The handheld/arena program.
 │    ├── boards
 │    └── src
+├── dashboard # The web dashboard.
+│    └── index.html # Appearance of the dashboard.
 ├── libs # Some generic libraries.
 │    └── bt # A general bluetooth lib.
 ├── milestone # Content for the Milestone
