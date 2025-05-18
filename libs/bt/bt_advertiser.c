@@ -10,8 +10,9 @@
 #include "bluetooth.h"
 
 LOG_MODULE_DECLARE(bt);
-
+#if CONFIG_BT_EXT_ADV
 static struct bt_le_ext_adv *adv;
+#endif
 // Maximum number of advertisements allowed
 #define MAX_ADVERTISEMENTS 4
 int adsLength = 0;
@@ -30,11 +31,7 @@ int insert_advertisement(Advertisement ad){
         .data_len = ad.len
     };
 
-    int err = bt_le_ext_adv_set_data(adv, ads, adsLength, NULL, 0);
-    if (err){
-        LOG_ERR("Failed to set advertisement data (err %d)", err);
-    }
-    return err;
+    return update_advertisements();
 }
 
 // report an uninitialised advertiser
@@ -44,7 +41,11 @@ int insert_advertisement_failed(Advertisement ad){
 }
 
 int update_advertisement(void) {
+#if CONFIG_BT_EXT_ADV
     int err = bt_le_ext_adv_set_data(adv, ads, adsLength, NULL, 0);
+#else
+    int err = bt_le_adv_update_data(ads, adsLength, NULL, 0);
+#endif
     if (err){
         LOG_ERR("Failed to set advertisement data (err %d)", err);
     }
@@ -53,24 +54,35 @@ int update_advertisement(void) {
 
 // Create the advertiser
 int create_advertiser(void){
+    int err = 0;
+#if CONFIG_BT_EXT_ADV
     struct bt_le_adv_param adv_params = {
         .options = BT_LE_ADV_OPT_USE_IDENTITY | BT_LE_ADV_OPT_EXT_ADV,
         .interval_min = BT_GAP_ADV_FAST_INT_MIN_2,
         .interval_max = BT_GAP_ADV_FAST_INT_MAX_2,
         .id = BT_ID_DEFAULT,
     };
-
-    int err = bt_le_ext_adv_create(&adv_params, NULL, &adv);
+    err = bt_le_ext_adv_create(&adv_params, NULL, &adv);
+#endif
     if (err){
         LOG_ERR("Failed to create advertiser (err %d)", err);
     }
-
     return err;
 }
 
 // start advertising
 int start_advertiser(void){
+#if CONFIG_BT_EXT_ADV
     int err = bt_le_ext_adv_start(adv, BT_LE_EXT_ADV_START_DEFAULT);
+#else
+    struct bt_le_adv_param adv_params = {
+        .options = BT_LE_ADV_OPT_USE_IDENTITY,
+        .interval_min = BT_GAP_ADV_FAST_INT_MIN_2,
+        .interval_max = BT_GAP_ADV_FAST_INT_MAX_2,
+        .id = BT_ID_DEFAULT,
+    };
+    int err = bt_le_adv_start(&adv_params,ads, adsLength,NULL,0);
+#endif
 
     if (err) {
         LOG_ERR("Failed to start advertiser (err %d)", err);

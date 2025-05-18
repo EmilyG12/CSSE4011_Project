@@ -1,10 +1,10 @@
-set(BOARD m5stack_core2/esp32/procpu)
+#set(BOARD m5stack_core2/esp32/procpu)
 cmake_minimum_required(VERSION 3.20.0)
 
 find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 project(artemis-lime-trainer)
 
-target_include_directories(app PRIVATE ../../libs)
+target_include_directories(app PRIVATE ../libs)
 target_sources(app PRIVATE
         ../libs/bt/bluetooth.c
         ../libs/bt/bt_scanner.c
@@ -13,4 +13,12 @@ target_sources(app PRIVATE
 )
 
 
-target_sources(app PRIVATE src/fight_ad.c)
+target_include_directories(app PRIVATE src)
+target_sources(app PRIVATE
+        src/fight_ad.c
+        src/fight_observer.c
+        src/game_controller.c
+        src/controller.c
+        src/game.c
+        src/main.c
+)

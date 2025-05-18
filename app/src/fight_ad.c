@@ -2,23 +2,14 @@
 // Created by Sioryn Willett on 2025-05-14.
 //
 
+#include "fight_ad.h"
+
 #include <ctype.h>
 #include <stdint.h>
 #include <string.h>
-#include <bt/bluetooth.h>
+#include "../../libs/bt/bluetooth.h"
+#include <zephyr/random/random.h>
 #include <zephyr/sys/util.h>
-
-typedef enum {
-    FC_WAITING  = 0x00,
-    FC_INITIATE = 0x01,
-    FC_ACCEPT   = 0x02,
-    FC_MOVE_0   = 0x10,
-    FC_MOVE_1,
-    FC_MOVE_2,
-    FC_MOVE_3,
-    FC_FLEE     = 0xFF,
-    FC_DONE     = 0xD0
-} FightCommand;
 
 uint8_t fightAdData[] = {
     0xFF, 0xFF, // Vendor (Custom)
@@ -35,21 +26,10 @@ uint8_t fightAdData[] = {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-struct FightAd {
-    uint32_t* const ourUUID;
-    uint32_t* const sessionID;
-    uint16_t* const sequenceNumber;
-    uint16_t* const command;
-    uint8_t*  const args;
-} fightAd = {
-    (void*) (fightAdData + 4),
-    (void*) (fightAdData + 8),
-    (void*) (fightAdData + 16),
-    (void*) (fightAdData + 18),
-    (fightAdData + 20)
-};
+FightAd fightAd;
 
 int init_fight_bt(void){
+    fightAd = parse_fight_ad(fightAdData, ARRAY_SIZE(fightAdData));
     if (init_bt()) {
         return 1;
     }
@@ -66,7 +46,7 @@ int init_fight_bt(void){
 }
 
 int fight_ad_initiate(uint32_t opponentUUID, uint16_t fighter, uint8_t moves[]){
-    (*fightAd.sessionID) = rand();
+    (*fightAd.sessionID) = sys_rand32_get();
     (*fightAd.sequenceNumber)++;
     (*fightAd.command) = FC_INITIATE;
 
@@ -116,9 +96,29 @@ int fight_ad_move(int move){
     return !update_advertisements();
 }
 
-int fight_ad_flee(int move){
+int fight_ad_flee(void){
     (*fightAd.sequenceNumber)++;
     (*fightAd.command) = FC_FLEE;
 
     return !update_advertisements();
+}
+
+FightAd parse_fight_ad(uint8_t data[], size_t len) {
+    for (int i = 0; i < 4; i++) {
+        if (data[i] != fightAdData[i]) {
+            return (FightAd){NULL};
+        }
+    }
+
+    return (FightAd){
+        (void*) (fightAdData + 4),
+        (void*) (fightAdData + 8),
+        (void*) (fightAdData + 16),
+        (void*) (fightAdData + 18),
+        (fightAdData + 20)
+    };
+}
+
+FightAd get_fight_ad(void) {
+    return fightAd;
 }

@@ -45,8 +45,15 @@ static void device_found(const bt_addr_le_t *addr, int8_t rssi, uint8_t type, st
     strtok(addr_str, " "); // Trimming everything after first whitespace.
 
     for (int i = 0; i < observerLen; i++) {
-        if (observers[i].filter(addr_str, rssi, type, ad->data, ad->len)) {
-            LOG_DBG("Observer Matched: %s", addr_str);
+        if (observers[i].filter) {
+            if (!observers[i].filter(addr_str, rssi, type, ad->data, ad->len)) {
+                continue;
+            }
+        }
+
+        LOG_DBG("Observer Matched: %s", addr_str);
+
+        if (observers[i].callback) {
             observers[i].callback(addr_str, rssi, type, ad->data, ad->len);
         }
     }
