@@ -14,7 +14,11 @@
 │    ├── boards
 │    └── src
 ├── dashboard # The web dashboard.
-│    └── index.html # Appearance of the dashboard.
+│    ├── backend
+│    │     └── app.js # Handle HTTP Requests.
+│    └── frontend
+│    │     ├── index.html # Appearance of the dashboard.
+│    │     └── app.js # Change dashboard appearance.
 ├── libs # Some generic libraries.
 │    └── bt # A general bluetooth lib.
 ├── milestone # Content for the Milestone
