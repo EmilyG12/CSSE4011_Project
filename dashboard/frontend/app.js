@@ -1,5 +1,5 @@
 function updateLeaderboard() {
-    fetch("test.php")
+    fetch("get_leaderboard.php")
         .then(response => {
             return response.json();
         })
