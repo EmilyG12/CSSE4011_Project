@@ -30,6 +30,7 @@ int insert_advertisement(Advertisement ad){
         .data = ad.data,
         .data_len = ad.len
     };
+    LOG_INF("Added new advertisement");
 
     return update_advertisements();
 }
@@ -105,14 +106,14 @@ Advertiser init_advertiser(){
         return invalid_advertiser();
     }
 
-    err = insert_advertisement((Advertisement){
-        .type = BT_DATA_FLAGS,
-        .data = (uint8_t[]){BT_LE_AD_NO_BREDR},
-        .len = 1
-    });
-    if (err) {
-        return invalid_advertiser();
-    }
+    // err = insert_advertisement((Advertisement){
+    //     .type = BT_DATA_FLAGS,
+    //     .data = (uint8_t[]){BT_LE_AD_NO_BREDR},
+    //     .len = 1
+    // });
+    // if (err) {
+    //     return invalid_advertiser();
+    // }
 
     err = start_advertiser();
     if (err) {

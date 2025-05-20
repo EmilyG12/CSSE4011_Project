@@ -12,7 +12,7 @@ target_sources(app PRIVATE
         #        ../../libs/bt/cli_observer.c
 )
 
-
+target_compile_definitions(app PRIVATE MY_UUID=${MY_UUID})
 target_include_directories(app PRIVATE src)
 target_sources(app PRIVATE
         src/fight_ad.c

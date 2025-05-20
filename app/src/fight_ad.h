@@ -29,6 +29,7 @@ typedef struct FightAd {
 
 int init_fight_bt(void);
 
+int fight_ad_waiting(const char* name);
 int fight_ad_initiate(uint32_t opponentUUID, uint16_t fighter, uint8_t moves[]);
 int fight_ad_accept(uint32_t opponentUUID, uint32_t sessionID, uint16_t fighter, uint8_t moves[]);
 int fight_ad_decline(uint32_t sessionID, uint32_t opponentUUID);

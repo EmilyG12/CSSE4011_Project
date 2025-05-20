@@ -29,6 +29,9 @@ int init_bt() {
 bool register_advertisement(Advertisement ad) {
     if (!advertiser.add) {
         advertiser = init_advertiser();
+        if (advertiser.add) {
+            LOG_INF("Advertiser started");
+        }
     }
 
     return !advertiser.add(ad);

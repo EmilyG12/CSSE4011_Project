@@ -11,28 +11,34 @@
 #include <zephyr/random/random.h>
 #include <zephyr/sys/util.h>
 
+#ifndef MY_UUID
+#define MY_UUID 0xe1, 0xfd, 0x11, 0xdc
+#warning using default UUID
+#endif
+
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(fight);
+
 uint8_t fightAdData[] = {
     0xFF, 0xFF, // Vendor (Custom)
     0xDE, 0xAD, // Device Type (Fight game)
-    // Our UUID
-    0xe1, 0xfd, 0x11, 0xdc,
+    MY_UUID,
     // Session ID
     0x00, 0x00, 0x00, 0x00,
     // Sequence Number
     0x00, 0x00,
     // Command
-    FC_WAITING, FC_WAITING,
+    0x00, 0x00,
     // Args
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
 FightAd fightAd;
 
-int init_fight_bt(void){
+int init_fight_ad(void) {
     fightAd = parse_fight_ad(fightAdData, ARRAY_SIZE(fightAdData));
-    if (init_bt()) {
-        return 1;
-    }
+    (*fightAd.sessionID) = 0x00000000;
+    (*fightAd.command) = FC_DONE;
 
     if (register_advertisement((Advertisement){
         BT_DATA_MANUFACTURER_DATA,
@@ -42,7 +48,24 @@ int init_fight_bt(void){
         return 2;
     }
 
+
     return 0;
+}
+
+int init_fight_bt(void){
+    if (init_bt()) {
+        return 1;
+    }
+
+    return init_fight_ad();
+}
+
+int fight_ad_waiting(const char* name) {
+    (*fightAd.sequenceNumber)++;
+    (*fightAd.command) = FC_WAITING;
+    strncpy((char*) fightAd.args, name, 16);
+
+    return !update_advertisements();
 }
 
 int fight_ad_initiate(uint32_t opponentUUID, uint16_t fighter, uint8_t moves[]){
@@ -111,11 +134,11 @@ FightAd parse_fight_ad(uint8_t data[], size_t len) {
     }
 
     return (FightAd){
-        (void*) (fightAdData + 4),
-        (void*) (fightAdData + 8),
-        (void*) (fightAdData + 16),
-        (void*) (fightAdData + 18),
-        (fightAdData + 20)
+        (void*) (data + 4),
+        (void*) (data + 8),
+        (void*) (data + 16),
+        (void*) (data + 18),
+        (data + 20)
     };
 }
 

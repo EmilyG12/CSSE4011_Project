@@ -68,6 +68,7 @@ bool fight_ad_observe(const char *mac_addr, int rssi, int type, uint8_t data[], 
     if (!fight_ad.uuid) {
         return false;
     }
+
     fight_ad_process(fight_ad);
     return true;
 }
