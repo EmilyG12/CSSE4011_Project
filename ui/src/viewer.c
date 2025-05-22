@@ -87,7 +87,7 @@ static void action_3(lv_event_t *e)
 
 }
 
-static void action_4(lv_event_t *e)
+static void action_4(int e)
 {
    Button *btn = (Button *)lv_event_get_user_data(e);
    if (btn->set) {
@@ -215,11 +215,19 @@ lv_obj_t* set_healthbar(Player *player)
 
 }
 
-Button create_button(void (*callback)(lv_event_t *), lv_obj_t* screen, int x, int y, char* label, int width, int height, Button *button_ptr) {
+void redirect_cb(lv_event_t *e) {
+   Button *btn = (Button *)lv_event_get_user_data(e);
+   if (btn->set) {
+      btn->callback(btn->id);
+   }
+}
+
+
+Button create_button(void (*callback)(int), lv_obj_t* screen, int x, int y, char* label, int width, int height, Button *button_ptr) {
       lv_obj_t *btn = lv_button_create(screen);
       lv_obj_t *txt = lv_label_create(btn);
       lv_obj_align(btn, LV_ALIGN_DEFAULT, x, y);
-      lv_obj_add_event_cb(btn, callback, LV_EVENT_CLICKED, button_ptr);
+      lv_obj_add_event_cb(btn, redirect_cb, LV_EVENT_CLICKED, button_ptr);
       lv_label_set_text(txt, label);
       lv_obj_align(txt, LV_ALIGN_CENTER, 0, 0);
       lv_obj_set_size(btn, width, height);
@@ -227,6 +235,7 @@ Button create_button(void (*callback)(lv_event_t *), lv_obj_t* screen, int x, in
       button.button = btn;
       button.label = txt;
       button.set = 1;
+      button.callback = callback
       if (button_ptr) {
          *button_ptr = button;
       }

@@ -40,6 +40,8 @@ typedef struct {
     lv_obj_t *button;
     lv_obj_t *label;
     int set;
+    int id;
+    void (*callback)(int id);
 } Button; 
 
 typedef struct {
