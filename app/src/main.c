@@ -33,14 +33,14 @@ int cmd_initiate(const struct shell* shell, int argc, char *argv[]) {
     return fight_ad_initiate(atoi(argv[1]), atoi(argv[2]), moves);
 }
 
-SHELL_CMD_ARG_REGISTER(initiate, NULL, "Initiate a fight with a nearby player", cmd_initiate, 8, 0);
+SHELL_CMD_ARG_REGISTER(initiate, NULL, "Initiate a fight with a nearby player", cmd_initiate, 7, 0);
 
 int cmd_accept(const struct shell* shell, int argc, char *argv[]) {
     char moves[] = {atoi(argv[4]), atoi(argv[5]), atoi(argv[6]), atoi(argv[7])};
-    return fight_ad_accept(atoi(argv[1]), atoi(argv[2]), atoi(argv[3]), moves);
+    return fight_ad_accept(strtol((argv[1]), NULL, 0) , strtol((argv[2]), NULL, 0), atoi(argv[3]), moves);
 }
 
-SHELL_CMD_ARG_REGISTER(accept, NULL, "Accept a fight from a nearby player", cmd_accept, 9, 0);
+SHELL_CMD_ARG_REGISTER(accept, NULL, "Accept a fight from a nearby player", cmd_accept, 8, 0);
 
 
 int cmd_decline(const struct shell* shell, int argc, char *argv[]) {

@@ -37,7 +37,19 @@ Player* find_player(Player* players, int playerCount, uint32_t uuid) {
     return NULL;
 }
 
-void register_waiting(FightAd ad) {
+
+
+Fight* find_fight(Fight* fights, int fightCount, uint32_t sessionID) {
+    for (int i = 0; i < fightCount; i++) {
+        if (fights[i].sessionID == sessionID) {
+            return fights + i;
+        }
+    }
+
+    return NULL;
+}
+
+int register_waiting(FightAd ad) {
     Player* known = find_player(arena.waitingPlayers, arena.waitingCount, *ad.uuid);
     if (!known) {
         arena.waitingPlayers = realloc(arena.waitingPlayers, (arena.waitingCount + 2) * sizeof(Player));
@@ -55,6 +67,8 @@ void register_waiting(FightAd ad) {
             known->name, known->sequenceNumber, *ad.sequenceNumber, known->uuid, *ad.sessionID);
         known->sequenceNumber = *ad.sequenceNumber;
     }
+
+    return 0;
 }
 
 Player remove_player_or_create(Player* players, int* playerCount, uint32_t uuid) {
@@ -72,38 +86,69 @@ Player remove_player_or_create(Player* players, int* playerCount, uint32_t uuid)
     return player;
 }
 
-void register_initiate(FightAd ad) {
+int register_initiate(FightAd ad) {
     Player* known = find_player(arena.pendingPlayers, arena.pendingCount, *ad.uuid);
     if (!known) {
         Player player = remove_player_or_create(arena.waitingPlayers, &arena.waitingCount, *ad.uuid);
-        player.sequenceNumber = *ad.sequenceNumber;
         arena.pendingPlayers = realloc(arena.pendingPlayers, (arena.pendingCount + 2) * sizeof(Player));
         arena.pendingPlayers[arena.pendingCount] = player;
-        known = arena.pendingPlayers + arena.waitingCount++;
+        known = arena.pendingPlayers + arena.pendingCount++;
     }
 
     known->fighter = *(uint16_t*) (ad.args + sizeof(uint32_t));
     memcpy(ad.args + sizeof(uint32_t) + sizeof(uint16_t), known->moves, 4);
 
     if (known->sequenceNumber != *ad.sequenceNumber) {
-        LOG_INF("[%s (%d->%d)]: Initiated a duel with",
+        LOG_INF("[%s (%d->%d)]: Initiated a duel (uuid: 0x%x)(session: 0x%x)",
             known->name, known->sequenceNumber, *ad.sequenceNumber, known->uuid, *ad.sessionID);
         known->sequenceNumber = *ad.sequenceNumber;
     }
+
+    return 0;
 }
 
-void register_ad(FightAd ad) {
+int register_accept(FightAd ad) {
+    Fight* fight = find_fight(arena.fights, arena.fightCount, *ad.sessionID);
+    if (!fight) {
+        Player accepter = remove_player_or_create(arena.waitingPlayers, &arena.waitingCount, *ad.uuid);
+        uint32_t sessionID = *ad.sessionID;
+        uint32_t opponentUUID = *(uint32_t*) (ad.args);
+        accepter.fighter = *(uint16_t*) (ad.args + sizeof(uint32_t));
+        memcpy(ad.args + sizeof(uint32_t) + sizeof(uint16_t), accepter.moves, 4);
+
+        // FIXME check the accept matches the initiate
+        Player initiater = remove_player_or_create(arena.pendingPlayers, &arena.pendingCount, opponentUUID);
+        Fight newFight = {
+            .players[0] = initiater,
+            .players[1] = accepter,
+            .sessionID = *ad.sessionID,
+        };
+        arena.fights = realloc(arena.fights, (arena.fightCount + 1) * sizeof(Fight));
+        arena.fights[arena.fightCount++] = newFight;
+    }
+
+    fight = find_fight(arena.fights, arena.fightCount, *ad.sessionID);
+    Player* known = fight->players + ((fight->players[0].uuid == *ad.uuid) ? 0 : 1);
+
+    if (known->sequenceNumber != *ad.sequenceNumber) {
+        LOG_INF("[%s (%d->%d)]: Accepted a duel (uuid: 0x%x)(session: 0x%x)",
+            known->name, known->sequenceNumber, *ad.sequenceNumber, known->uuid, *ad.sessionID);
+        known->sequenceNumber = *ad.sequenceNumber;
+    }
+
+    return 0;
+}
+
+int register_ad(FightAd ad) {
     switch (*ad.command) {
         case FC_WAITING:
-            register_waiting(ad);
-            return;
+            return register_waiting(ad);
         case FC_INITIATE:
-            register_initiate(ad);
-            return;
+            return register_initiate(ad);
         case FC_ACCEPT:
-            // register_accept(ad);
+            return register_accept(ad);
         default:
-
+            return -1;
     }
 }
 
@@ -122,10 +167,10 @@ bool fight_ad_observe_arena(const char *mac_addr, int rssi, int type, uint8_t da
             if (!fight_ad.uuid) {
                 continue;
             }
-            register_ad(fight_ad);
-            return true;
+            return !register_ad(fight_ad);
         }
     }
+
     return false;
 }
 
