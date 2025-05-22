@@ -1,11 +1,12 @@
 #include "viewer.h"
-
+#define POKEMON_COUNT 8
 LOG_MODULE_DECLARE(app);
 
 
 /* declaring all possible images/characters available*/
 
 LV_IMG_DECLARE(battleground_b);
+
 LV_IMG_DECLARE(bulbafront);
 LV_IMG_DECLARE(bulbaback);
 LV_IMG_DECLARE(charback);
@@ -21,9 +22,19 @@ LV_IMG_DECLARE(pikaback);
 LV_IMG_DECLARE(poliback);
 LV_IMG_DECLARE(polifront);
 LV_IMG_DECLARE(cleffront);
-LV_IMG_DECLARE(cleffback);
+LV_IMG_DECLARE(clefback);
 LV_IMG_DECLARE(mewfront);
 LV_IMG_DECLARE(mewback);
+
+Sprite charmander = {"charmander", &charfront, &charback};
+Sprite squirtle = {"squirtle", &squirtfront, &squirtback};
+Sprite bulbasaur = {"bulbasaur", &bulbafront, &bulbaback};
+Sprite pidgey = {"pidgey", &pidgefront, &pidgeback};
+Sprite pikachu = {"pikachu", &pikafront, &pikaback};
+Sprite clefairy = {"clefairy", &cleffront, &clefback};
+Sprite mew = {"mew", &mewfront, &mewback};
+Sprite poliwhirl = {"poliwhirl", &polifront, &poliback};
+Sprite *sprites[POKEMON_COUNT] = {&charmander, &squirtle, &bulbasaur, &pidgey, &pikachu, &clefairy, &mew, &poliwhirl};
 
 /* end of declarations */
 
@@ -53,48 +64,41 @@ TODO: a1-10 will be connection buttons (lists top 10 connections, names them, an
 */
 
 /* SIORYN - ALL CALLBACKS HERE */
-static void action_1(lv_event_t *e)
+static void action_1(int e)
 {
 
-   Button *btn = (Button *)lv_event_get_user_data(e);
-   if (btn->set) {
-      change_player_health(&user, 50);
-      change_player_health(&opponent, 75);
-      LOG_INF("action 1");
-   }
+   // Button *btn = (Button *)lv_event_get_user_data(e);
+   // if (btn->set) {
+   change_player_health(&user, 50);
+   change_player_health(&opponent, 75);
+   LOG_INF("action 1");
+   // }
 
 }
 
-static void action_2(lv_event_t *e)
+static void action_2(int e)
 {
-   Button *btn = (Button *)lv_event_get_user_data(e);
-   if (btn->set) {
-      change_player_action(&user, "Tickle", 0, &b1);
-      LOG_INF("action 2");
-   }
+
+   change_player_action(&user, "Tickle", 0, &b1);
+   LOG_INF("action 2");
 
 }
 
-static void action_3(lv_event_t *e)
+static void action_3(int e)
 {
-   Button *btn = (Button *)lv_event_get_user_data(e);
-   if (btn->set) {
-      Player new;
-      initialise_player(&new, USER, "asshat", 100, generic_actions_2);
-      change_battle_scene(&new, &opponent);
-      LOG_INF("action 3");
-   }
+   Player new;
+   initialise_player(&new, USER, "charmander", 100, generic_actions_2);
+   change_battle_scene(&new, &opponent, 0b1011);
+   LOG_INF("action 3");
 
 }
 
 static void action_4(int e)
 {
-   Button *btn = (Button *)lv_event_get_user_data(e);
-   if (btn->set) {
-      set_button_mode(&b1, 0);
-      set_user_sprite(&user, &charback);
-      LOG_INF("action 4");
-   }
+
+   set_button_mode(&b1, 0);
+   set_user_sprite(&user, &charback);
+   LOG_INF("action 4");
 
 }
 
@@ -125,9 +129,31 @@ void display_player_health(Player *player) {
    }
 }
 
-void initialise_player(Player *player, int playerNum, const char *name, int maxHealth, char actions[4][20]) {
+void set_player_sprite(Player *player) {
+   int found = 0;
+   for (int i = 0; i < POKEMON_COUNT; i++) {
+      if (!strcmp(player->pName, sprites[i]->name)) {
+         if (player->playerNum == OPPONENT) {
+            player->sprite_img = sprites[i]->front;
+         } else if (player->playerNum == USER) {
+            player->sprite_img = sprites[i]->back;
+         }
+         found = 1;
+         break;
+      }
+   }
+   if (found) {
+      set_user_sprite(player, player->sprite_img);
+   } else {
+      set_user_sprite(player, &bulbaback);
+      LOG_ERR("Sprite not found");
+   }
+   set_user_sprite(player, player->sprite_img);
+}
+
+void initialise_player(Player *player, int playerNum, const char name[], int maxHealth, char actions[4][20]) {
    player->playerNum = playerNum;
-   snprintf(player->pName, sizeof(player->pName), "%s", name);
+   strncpy(player->pName, name, sizeof(player->pName) - 1);
    player->maxHealth = maxHealth;
    player->health = maxHealth;
    for (int i = 0; i < 4; i++) {
@@ -135,7 +161,7 @@ void initialise_player(Player *player, int playerNum, const char *name, int maxH
    }
    player->sprite = NULL;
    player->turn = 1;
-   player->sprite_img = NULL;
+   set_player_sprite(player);
 }
 
 void change_player_name(Player *player, const char *name) {
@@ -222,12 +248,10 @@ void redirect_cb(lv_event_t *e) {
    }
 }
 
-
 Button create_button(void (*callback)(int), lv_obj_t* screen, int x, int y, char* label, int width, int height, Button *button_ptr) {
       lv_obj_t *btn = lv_button_create(screen);
       lv_obj_t *txt = lv_label_create(btn);
       lv_obj_align(btn, LV_ALIGN_DEFAULT, x, y);
-      lv_obj_add_event_cb(btn, redirect_cb, LV_EVENT_CLICKED, button_ptr);
       lv_label_set_text(txt, label);
       lv_obj_align(txt, LV_ALIGN_CENTER, 0, 0);
       lv_obj_set_size(btn, width, height);
@@ -235,10 +259,11 @@ Button create_button(void (*callback)(int), lv_obj_t* screen, int x, int y, char
       button.button = btn;
       button.label = txt;
       button.set = 1;
-      button.callback = callback
+      button.callback = callback;
       if (button_ptr) {
          *button_ptr = button;
       }
+      lv_obj_add_event_cb(btn, redirect_cb, LV_EVENT_CLICKED, button_ptr);
       return button;
 }
 
@@ -258,12 +283,18 @@ void set_user_sprite(Player *player, const lv_img_dsc_t *img) {
 }
 
 void set_battle_scene(void) {
+
+   /* Clear screen, set flags to imply on battle scene*/
    scene = 1;
    lv_obj_clean(display.scr);
+
+   /* Creating buttons for battle scene */
    b1 = create_button(action_1, display.scr, 0, BUTTON_POS_1Y, user.actions[0], 80, 30, &b1);
    b2 = create_button(action_2, display.scr, 0, BUTTON_POS_1Y + BUTTON_HEIGHT, user.actions[1], 80, 30, &b2);
    b3 = create_button(action_3, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), user.actions[2], 80, 30, &b3);
-   b4 = create_button(action_4, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 3), user.actions[3], 80, 30, &b3);
+   b4 = create_button(action_4, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 3), user.actions[3], 80, 30, &b4);
+
+   /* setting player and opponent healthbars/health/name text */
    display.user_hlth = lv_label_create(display.scr);
    display.opponent_hlth = lv_label_create(display.scr);
    lv_obj_set_style_text_color(display.user_hlth, lv_color_black(), 0);
@@ -272,6 +303,8 @@ void set_battle_scene(void) {
    display_player_health(&opponent);
    display.user_hlthbar = set_healthbar(&user);
    display.opp_hlthbar = set_healthbar(&opponent);
+
+   /* creating the background */
    static lv_style_t style;
    lv_style_init(&style);
    lv_style_set_bg_color(&style, lv_palette_main(LV_PALETTE_YELLOW));
@@ -281,11 +314,13 @@ void set_battle_scene(void) {
    lv_img_set_src(img, &battleground_b);
    lv_obj_center(img);
    lv_obj_move_background(img);
+
+   /* setting initial sprites */
    set_user_sprite(&user, &bulbaback);
    set_user_sprite(&opponent, &bulbafront);
 }
 
-void change_battle_scene(Player *P1, Player *P2) {
+void change_battle_scene(Player *P1, Player *P2, uint8_t button_mask) {
    if (scene != 1) { // battle scene was already set, no need to create a new one
       set_battle_scene();
    } 
@@ -293,6 +328,10 @@ void change_battle_scene(Player *P1, Player *P2) {
    change_player_action(&user, P1->actions[1], 1, &b2);    
    change_player_action(&user, P1->actions[2], 2, &b3); 
    change_player_action(&user, P1->actions[3], 3, &b4);
+   set_button_mode(&b1, (button_mask >> 0) & 1);
+   set_button_mode(&b2, (button_mask >> 1) & 1);
+   set_button_mode(&b3, (button_mask >> 2) & 1);
+   set_button_mode(&b4, (button_mask >> 3) & 1);
    change_player_maxHealth(&user, P1->maxHealth);
    change_player_maxHealth(&opponent, P2->maxHealth);
    change_player_turn(&user, P1->turn);
@@ -315,6 +354,14 @@ void change_battle_scene(Player *P1, Player *P2) {
 /* Adds the background image, icon image and coordinates.
 */
 void create_screen(void) {
+
+   // squirtle = set_sprite_struct("squirtle", &squirtfront, &squirtback);
+   // bulbasaur = set_sprite_struct("bulbasaur", &bulbafront, &bulbaback);
+   // pidgey = set_sprite_struct("pidgey", &pidgefront, &pidgeback);
+   // pikachu = set_sprite_struct("pikachu", &pikafront, &pikaback);
+   // clefairy = set_sprite_struct("clefairy", &cleffront, &clefback);
+   // mew = set_sprite_struct("mew", &mewfront, &mewback);
+   // poliwhirl = set_sprite_struct("poliwhirl", &polifront, &poliback);
    initialise_player(&user, USER, "player1", 100, generic_actions);
    initialise_player(&opponent, OPPONENT, "player2", 100, generic_actions);
    user.turn = 1;
