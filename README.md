@@ -20,7 +20,8 @@
 │    │     ├── index.html # Appearance of the dashboard.
 │    │     └── app.js # Change dashboard appearance.
 ├── libs # Some generic libraries.
-│    └── bt # A general bluetooth lib.
+│    ├── bt # A general bluetooth lib.
+│    └── wifi # A general wifi lib.
 ├── milestone # Content for the Milestone
 └── scripts # Helpful scripts for development
 ```
