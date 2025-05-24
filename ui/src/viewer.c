@@ -101,7 +101,7 @@ static void action_3(int e)
 {
    Player new;
    initialise_player(&new, USER, "charmander", 100, generic_actions_2);
-   change_battle_scene(&new, &opponent, 0b1011);
+   change_battle_scene(&new, &opponent, 0b1101);
    LOG_INF("action 3");
 
 }
@@ -313,10 +313,10 @@ void set_battle_scene(void) {
    lv_obj_clean(display.scr);
 
    /* Creating buttons for battle scene */
-   b1 = create_button(action_1, display.scr, 0, BUTTON_POS_1Y, user.actions[0], 80, 30, ACT1_ID, &b1);
-   b2 = create_button(action_2, display.scr, 0, BUTTON_POS_1Y + BUTTON_HEIGHT, user.actions[1], 80, 30, ACT2_ID, &b2);
-   b3 = create_button(action_3, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), user.actions[2], 80, 30, ACT3_ID, &b3);
-   b4 = create_button(action_4, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 3), user.actions[3], 80, 30, ACT4_ID, &b4);
+   b1 = create_button(action_1, display.scr, 0, BUTTON_POS_1Y, user.actions[0], 80, 45, ACT1_ID, &b1);
+   b2 = create_button(action_2, display.scr, 0, BUTTON_POS_1Y + BUTTON_HEIGHT, user.actions[1], 80, 45, ACT2_ID, &b2);
+   b3 = create_button(action_3, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), user.actions[2], 80, 45, ACT3_ID, &b3);
+   b4 = create_button(action_4, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 3), user.actions[3], 80, 45, ACT4_ID, &b4);
 
    /* setting player and opponent healthbars/health/name text */
    display.user_hlth = lv_label_create(display.scr);
@@ -344,6 +344,10 @@ void set_battle_scene(void) {
    set_user_sprite(&opponent, opponent.sprite_img);
 }
 
+/* button mask will set action 1 based on bit 0, 2 based on bit 1, so on and so forth
+   0 = greyed out, 1 = available
+   */
+*/
 void change_battle_scene(Player *P1, Player *P2, uint8_t button_mask) {
    if (scene != 1) { // battle scene was already set, no need to create a new one
       set_battle_scene();
@@ -373,15 +377,15 @@ void change_connection_scene(uint32_t connections) {
    if (scene != 2) {
       LOG_INF("Changing to connection scene");
       lv_obj_clean(display.scr);
-      c1 = create_button(connection, display.scr, 10, BUTTON_POS_1Y, "Connect", 90, 30, CONN1_ID , &c1);
-      c4 = create_button(connection, display.scr, 10, BUTTON_POS_1Y + BUTTON_HEIGHT, "Connect", 90, 30, CONN2_ID , &c4);
-      c7 = create_button(connection, display.scr, 10, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), "Connect", 90, 30, CONN3_ID , &c7);
-      c2 = create_button(connection, display.scr, 110, BUTTON_POS_1Y, "Connect", 90, 30, CONN4_ID , &c2);
-      c5 = create_button(connection, display.scr, 110, BUTTON_POS_1Y + BUTTON_HEIGHT, "Connect", 90, 30, CONN4_ID , &c5);
-      c8 = create_button(connection, display.scr, 110, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), "Connect", 90, 30, CONN4_ID , &c8);
-      c3 = create_button(connection, display.scr, 210, BUTTON_POS_1Y, "Connect", 90, 30, CONN4_ID , &c3);
-      c6 = create_button(connection, display.scr, 210, BUTTON_POS_1Y + BUTTON_HEIGHT, "Connect", 90, 30, CONN4_ID , &c6);
-      c9 = create_button(connection, display.scr, 210, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), "Connect", 90, 30, CONN4_ID , &c9);
+      c1 = create_button(connection, display.scr, 10, BUTTON_POS_1Y, "Connect", 90, 45, CONN1_ID , &c1);
+      c4 = create_button(connection, display.scr, 10, BUTTON_POS_1Y + BUTTON_HEIGHT, "Connect", 90, 45, CONN2_ID , &c4);
+      c7 = create_button(connection, display.scr, 10, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), "Connect", 90, 45, CONN3_ID , &c7);
+      c2 = create_button(connection, display.scr, 110, BUTTON_POS_1Y, "Connect", 90, 45, CONN4_ID , &c2);
+      c5 = create_button(connection, display.scr, 110, BUTTON_POS_1Y + BUTTON_HEIGHT, "Connect", 90, 45, CONN4_ID , &c5);
+      c8 = create_button(connection, display.scr, 110, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), "Connect", 90, 45, CONN4_ID , &c8);
+      c3 = create_button(connection, display.scr, 210, BUTTON_POS_1Y, "Connect", 90, 45, CONN4_ID , &c3);
+      c6 = create_button(connection, display.scr, 210, BUTTON_POS_1Y + BUTTON_HEIGHT, "Connect", 90, 45, CONN4_ID , &c6);
+      c9 = create_button(connection, display.scr, 210, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), "Connect", 90, 45, CONN4_ID , &c9);
       scene = 2;
    }
    for (int i = 0; i < 9; i++) {

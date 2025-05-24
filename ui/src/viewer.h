@@ -17,8 +17,8 @@
 #define REAL_HEIGHT 4
 #define HALF_STAR_W 15
 
-#define BUTTON_HEIGHT 40
-#define BUTTON_POS_1Y 50
+#define BUTTON_HEIGHT 50
+#define BUTTON_POS_1Y 20
 
 #define P2X 170
 #define P2Y 30
