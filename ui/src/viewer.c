@@ -2,7 +2,7 @@
 #define POKEMON_COUNT 8
 LOG_MODULE_DECLARE(app);
 
-
+#if defined(CONFIG_LVGL)
 /* declaring all possible images/characters available*/
 
 LV_IMG_DECLARE(battleground_b);
@@ -37,6 +37,7 @@ Sprite poliwhirl = {"poliwhirl", &polifront, &poliback};
 Sprite *sprites[POKEMON_COUNT] = {&charmander, &squirtle, &bulbasaur, &pidgey, &pikachu, &clefairy, &mew, &poliwhirl};
 
 /* end of declarations */
+#endif
 
 Display display;
 Player user;
@@ -75,6 +76,7 @@ b1, b2, b3, b4 are battle scene buttons
 TODO: a1-10 will be connection buttons (lists top 10 connections, names them, and upon pressing changes ad for m5)
 */
 
+#if defined(CONFIG_LVGL)
 /* SIORYN - ALL CALLBACKS HERE */
 static void action_1(int e)
 {
@@ -481,6 +483,7 @@ void create_screen(void) {
    user.turn = 1;
    opponent.turn = 0;
    display.scr = lv_scr_act();
-   // set_battle_scene();
    change_connection_scene(0b111000111);
 }
+
+#endif
