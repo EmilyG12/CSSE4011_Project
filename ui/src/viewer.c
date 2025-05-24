@@ -46,6 +46,18 @@ Button b1;
 Button b2;
 Button b3;
 Button b4;
+
+/* CONNECTION BUTTONS -- button.setting could be used to imply which connection number is being referred to -- putting that ID into callback*/
+Button c1;
+Button c2;
+Button c3;
+Button c4;
+Button c5;
+Button c6;
+Button c7;
+Button c8;
+Button c9;
+
 char generic_actions[4][20] = {"Attack", "Defend", "Heal", "Flee"};
 char generic_actions_2[4][20] = {"Condone", "Chide", "Murder", "Flee"}; 
 
@@ -79,8 +91,7 @@ static void action_1(int e)
 static void action_2(int e)
 {
 
-   change_player_action(&user, "Tickle", 0, &b1);
-   LOG_INF("action 2");
+   change_connection_scene(0b101000101);
 
 }
 
@@ -100,6 +111,13 @@ static void action_4(int e)
    set_user_sprite(&user, &charback);
    LOG_INF("action 4");
 
+}
+
+static void connection(int e) {
+   //knowing e is an int referring to the connection number, something something something connect to connection 'x' through some math to get what 'x' is knowing the ID
+   //assume the connection list is in order of connection number
+
+   change_battle_scene(&user, &opponent, 0b1111);
 }
 
 /* NO MORE CALLBACKS */
@@ -248,7 +266,7 @@ void redirect_cb(lv_event_t *e) {
    }
 }
 
-Button create_button(void (*callback)(int), lv_obj_t* screen, int x, int y, char* label, int width, int height, Button *button_ptr) {
+Button create_button(void (*callback)(int), lv_obj_t* screen, int x, int y, char* label, int width, int height, int id, Button *button_ptr) {
       lv_obj_t *btn = lv_button_create(screen);
       lv_obj_t *txt = lv_label_create(btn);
       lv_obj_align(btn, LV_ALIGN_DEFAULT, x, y);
@@ -256,6 +274,7 @@ Button create_button(void (*callback)(int), lv_obj_t* screen, int x, int y, char
       lv_obj_align(txt, LV_ALIGN_CENTER, 0, 0);
       lv_obj_set_size(btn, width, height);
       Button button;
+      button.id = id;
       button.button = btn;
       button.label = txt;
       button.set = 1;
@@ -284,15 +303,18 @@ void set_user_sprite(Player *player, const lv_img_dsc_t *img) {
 
 void set_battle_scene(void) {
 
+   initialise_player(&user, USER, user.pName, user.maxHealth, user.actions);
+   initialise_player(&opponent, OPPONENT, opponent.pName, opponent.maxHealth, opponent.actions);
+
    /* Clear screen, set flags to imply on battle scene*/
    scene = 1;
    lv_obj_clean(display.scr);
 
    /* Creating buttons for battle scene */
-   b1 = create_button(action_1, display.scr, 0, BUTTON_POS_1Y, user.actions[0], 80, 30, &b1);
-   b2 = create_button(action_2, display.scr, 0, BUTTON_POS_1Y + BUTTON_HEIGHT, user.actions[1], 80, 30, &b2);
-   b3 = create_button(action_3, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), user.actions[2], 80, 30, &b3);
-   b4 = create_button(action_4, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 3), user.actions[3], 80, 30, &b4);
+   b1 = create_button(action_1, display.scr, 0, BUTTON_POS_1Y, user.actions[0], 80, 30, ACT1_ID, &b1);
+   b2 = create_button(action_2, display.scr, 0, BUTTON_POS_1Y + BUTTON_HEIGHT, user.actions[1], 80, 30, ACT2_ID, &b2);
+   b3 = create_button(action_3, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), user.actions[2], 80, 30, ACT3_ID, &b3);
+   b4 = create_button(action_4, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 3), user.actions[3], 80, 30, ACT4_ID, &b4);
 
    /* setting player and opponent healthbars/health/name text */
    display.user_hlth = lv_label_create(display.scr);
@@ -316,8 +338,8 @@ void set_battle_scene(void) {
    lv_obj_move_background(img);
 
    /* setting initial sprites */
-   set_user_sprite(&user, &bulbaback);
-   set_user_sprite(&opponent, &bulbafront);
+   set_user_sprite(&user, user.sprite_img);
+   set_user_sprite(&opponent, opponent.sprite_img);
 }
 
 void change_battle_scene(Player *P1, Player *P2, uint8_t button_mask) {
@@ -342,6 +364,106 @@ void change_battle_scene(Player *P1, Player *P2, uint8_t button_mask) {
    set_user_sprite(&opponent, P2->sprite_img);
 }
 
+/* Connections variable basically implies which connections are to be not greyed out: so 010010101 will show that connections 2, 5, 7 
+   and 9 are available. 
+*/
+void change_connection_scene(uint32_t connections) {
+   if (scene != 2) {
+      LOG_INF("Changing to connection scene");
+      lv_obj_clean(display.scr);
+      c1 = create_button(connection, display.scr, 10, BUTTON_POS_1Y, "Connect", 90, 30, CONN1_ID , &c1);
+      c4 = create_button(connection, display.scr, 10, BUTTON_POS_1Y + BUTTON_HEIGHT, "Connect", 90, 30, CONN2_ID , &c4);
+      c7 = create_button(connection, display.scr, 10, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), "Connect", 90, 30, CONN3_ID , &c7);
+      c2 = create_button(connection, display.scr, 110, BUTTON_POS_1Y, "Connect", 90, 30, CONN4_ID , &c2);
+      c5 = create_button(connection, display.scr, 110, BUTTON_POS_1Y + BUTTON_HEIGHT, "Connect", 90, 30, CONN4_ID , &c5);
+      c8 = create_button(connection, display.scr, 110, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), "Connect", 90, 30, CONN4_ID , &c8);
+      c3 = create_button(connection, display.scr, 210, BUTTON_POS_1Y, "Connect", 90, 30, CONN4_ID , &c3);
+      c6 = create_button(connection, display.scr, 210, BUTTON_POS_1Y + BUTTON_HEIGHT, "Connect", 90, 30, CONN4_ID , &c6);
+      c9 = create_button(connection, display.scr, 210, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), "Connect", 90, 30, CONN4_ID , &c9);
+      scene = 2;
+   }
+   for (int i = 0; i < 9; i++) {
+      int x = (connections >> i) & 1;
+      if (x) {
+         switch (i) {
+            case 0:
+               set_button_mode(&c1, 1);
+               change_button_label(&c1, "Available");
+               break;
+            case 1:
+               set_button_mode(&c2, 1);
+               change_button_label(&c2, "Available");
+               break;
+            case 2:
+               set_button_mode(&c3, 1);
+               change_button_label(&c3, "Available");
+               break;
+            case 3:
+               set_button_mode(&c4, 1);
+               change_button_label(&c4, "Available");
+               break;
+            case 4:
+               set_button_mode(&c5, 1);
+               change_button_label(&c5, "Available");
+               break;
+            case 5:
+               set_button_mode(&c6, 1);
+               change_button_label(&c6, "Available");
+               break;
+            case 6:
+               set_button_mode(&c7, 1);
+               change_button_label(&c7, "Available");
+               break;
+            case 7:
+               set_button_mode(&c8, 1);
+               change_button_label(&c8, "Available");
+               break;
+            case 8:
+               set_button_mode(&c9, 1);
+               change_button_label(&c9, "Available");
+               break;
+         }
+      } else {
+         switch (i) {
+            case 0:
+               set_button_mode(&c1, 0);
+               change_button_label(&c1, "Unavailable");
+               break;
+            case 1:
+               set_button_mode(&c2, 0);
+               change_button_label(&c2, "Unavailable");
+               break;
+            case 2:
+               set_button_mode(&c3, 0);
+               change_button_label(&c3, "Unavailable");
+               break;
+            case 3:
+               set_button_mode(&c4, 0);
+               change_button_label(&c4, "Unavailable");
+               break;
+            case 4:
+               set_button_mode(&c5, 0);
+               change_button_label(&c5, "Unavailable");
+               break;
+            case 5:
+               set_button_mode(&c6, 0);
+               change_button_label(&c6, "Unavailable");
+               break;
+            case 6:
+               set_button_mode(&c7, 0);
+               change_button_label(&c7, "Unavailable");
+               break;
+            case 7:
+               set_button_mode(&c8, 0);
+               change_button_label(&c8, "Unavailable");
+               break;
+            case 8:
+               set_button_mode(&c9, 0);
+               change_button_label(&c9, "Unavailable");
+         }
+      }
+   }
+}
 
 //TODO: make a list of buttons for each action DONE
 //TODO: set a function which changes the scene NOT NEEDED
@@ -354,18 +476,11 @@ void change_battle_scene(Player *P1, Player *P2, uint8_t button_mask) {
 /* Adds the background image, icon image and coordinates.
 */
 void create_screen(void) {
-
-   // squirtle = set_sprite_struct("squirtle", &squirtfront, &squirtback);
-   // bulbasaur = set_sprite_struct("bulbasaur", &bulbafront, &bulbaback);
-   // pidgey = set_sprite_struct("pidgey", &pidgefront, &pidgeback);
-   // pikachu = set_sprite_struct("pikachu", &pikafront, &pikaback);
-   // clefairy = set_sprite_struct("clefairy", &cleffront, &clefback);
-   // mew = set_sprite_struct("mew", &mewfront, &mewback);
-   // poliwhirl = set_sprite_struct("poliwhirl", &polifront, &poliback);
    initialise_player(&user, USER, "player1", 100, generic_actions);
    initialise_player(&opponent, OPPONENT, "player2", 100, generic_actions);
    user.turn = 1;
    opponent.turn = 0;
    display.scr = lv_scr_act();
-   set_battle_scene();
+   // set_battle_scene();
+   change_connection_scene(0b111000111);
 }
