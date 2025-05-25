@@ -7,6 +7,7 @@
 #include "fight_ad.h"
 #include "game_controller.h"
 #include "../../libs/bt/bluetooth.h"
+#include "ui/viewer.h"
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(app, LOG_LEVEL_DBG);
@@ -42,5 +43,7 @@ int main(void) {
 
     // TODO init the push buttons to call ic.buttonPressed
 
+
+    create_screen();
     return 0;
 }

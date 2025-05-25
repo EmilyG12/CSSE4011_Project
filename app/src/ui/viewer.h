@@ -1,15 +1,19 @@
 #ifndef VIEWER_H
 #define VIEWER_H
 
+#include <stdio.h>
+
+#ifdef CONFIG_LVGL
 #include <zephyr/drivers/display.h>
 #include <lvgl.h>
 #include <lvgl_mem.h>
-#include <stdio.h>
 #include <zephyr/kernel.h>
 #include <zephyr/logging/log.h>
 #include <zephyr/bluetooth/bluetooth.h>
-#include <zephyr/input/input.h>
 #include <lvgl_input_device.h>
+#include <zephyr/input/input.h>
+
+#endif
 
 #define WIDTH 295
 #define HEIGHT 220
@@ -75,7 +79,8 @@ typedef struct {
     char actions[4][20];
     lv_obj_t *sprite;
     const lv_img_dsc_t *sprite_img;
-} Player;
+} DisPlayer;
+
 //DisPlayer
 typedef struct {
     char action[20];
@@ -84,22 +89,21 @@ typedef struct {
 
 void create_screen(void);
 void change_logo_position(double newX, double newY);
-void change_healthbar(Player *player);
-void display_player_health(Player *player);
-void initialise_player(Player *player, int playerNum, const char *name, int maxHealth, char actions[4][20]);
+void change_healthbar(DisPlayer *player);
+void display_player_health(DisPlayer *player);
+void initialise_player(DisPlayer *player, int playerNum, const char *name, int maxHealth, char actions[4][20]);
 // void initialise_player(Player *player, int playerNum, const char name[], int maxHealth, char actions[4][20], uint8_t button_mask);
-void change_player_name(Player *player, const char *name);
-void change_player_health(Player *player, int health);
-void change_player_turn(Player *player, int turn);
-void change_player_maxHealth(Player *player, int maxHealth);
+void change_player_name(DisPlayer *player, const char *name);
+void change_player_health(DisPlayer *player, int health);
+void change_player_turn(DisPlayer *player, int turn);
+void change_player_maxHealth(DisPlayer *player, int maxHealth);
 void set_battle_scene(void);
-void change_player_action(Player *player, char *action, int index, Button *button);
+void change_player_action(DisPlayer *player, char *action, int index, Button *button);
 // void change_battle_scene(Player *P1, Player *P2);
-void change_player_stats(Player *player, const char *name, int health);
+void change_player_stats(DisPlayer *player, const char *name, int health);
 void set_button_mode(Button *button, int mode);
-void set_user_sprite(Player *player, const lv_img_dsc_t *img);
+void set_user_sprite(DisPlayer *player, const lv_img_dsc_t *img);
 Sprite set_sprite_struct(const char *name, const lv_img_dsc_t *front,const lv_img_dsc_t *back);
-void change_battle_scene(Player *P1, Player *P2, uint8_t button_mask);
+void change_battle_scene(DisPlayer *P1, DisPlayer *P2, uint8_t button_mask);
 void change_connection_scene(uint32_t connections);
-
 #endif

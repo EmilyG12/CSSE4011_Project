@@ -12,6 +12,8 @@ target_sources(app PRIVATE
         #        ../../libs/bt/cli_observer.c
 )
 
+file(GLOB IMG_FILES ${PROJECT_SOURCE_DIR}/src/ui/images/*.c)
+
 target_compile_definitions(app PRIVATE MY_UUID=${MY_UUID})
 target_include_directories(app PRIVATE src)
 target_sources(app PRIVATE
@@ -21,4 +23,8 @@ target_sources(app PRIVATE
         src/game.c
         src/fight.c
         src/main.c
+
+        src/ui/viewer.c
+        src/ui/rec_input.c
+        ${IMG_FILES}
 )

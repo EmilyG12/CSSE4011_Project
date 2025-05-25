@@ -40,8 +40,8 @@ Sprite *sprites[POKEMON_COUNT] = {&charmander, &squirtle, &bulbasaur, &pidgey, &
 #endif
 
 Display display;
-Player user;
-Player opponent;
+DisPlayer user;
+DisPlayer opponent;
 
 Button b1;
 Button b2;
@@ -99,9 +99,9 @@ static void action_2(int e)
 
 static void action_3(int e)
 {
-   Player new;
-   initialise_player(&new, USER, "charmander", 100, generic_actions_2);
-   change_battle_scene(&new, &opponent, 0b1101);
+   DisPlayer newPlayer;
+   initialise_player(&newPlayer, USER, "charmander", 100, generic_actions_2);
+   change_battle_scene(&newPlayer, &opponent, 0b1101);
    LOG_INF("action 3");
 
 }
@@ -124,7 +124,7 @@ static void connection(int e) {
 
 /* NO MORE CALLBACKS */
 
-void change_healthbar(Player *player) {
+void change_healthbar(DisPlayer *player) {
    int health_set = 100;
    if (player->health != player->maxHealth) {
       health_set = (player->maxHealth > 0) ? (player->health * 100) / player->maxHealth : 0;
@@ -136,7 +136,7 @@ void change_healthbar(Player *player) {
    }
 }
 
-void display_player_health(Player *player) {
+void display_player_health(DisPlayer *player) {
    char buffer[100];
    snprintf(buffer, ARRAY_SIZE(buffer), "%s:  %d/%d", player->pName, player->health, player->maxHealth);
    
@@ -149,7 +149,7 @@ void display_player_health(Player *player) {
    }
 }
 
-void set_player_sprite(Player *player) {
+void set_player_sprite(DisPlayer *player) {
    int found = 0;
    for (int i = 0; i < POKEMON_COUNT; i++) {
       if (!strcmp(player->pName, sprites[i]->name)) {
@@ -171,7 +171,7 @@ void set_player_sprite(Player *player) {
    set_user_sprite(player, player->sprite_img);
 }
 
-void initialise_player(Player *player, int playerNum, const char name[], int maxHealth, char actions[4][20]) {
+void initialise_player(DisPlayer *player, int playerNum, const char name[], int maxHealth, char actions[4][20]) {
    player->playerNum = playerNum;
    strncpy(player->pName, name, sizeof(player->pName) - 1);
    player->maxHealth = maxHealth;
@@ -184,12 +184,12 @@ void initialise_player(Player *player, int playerNum, const char name[], int max
    set_player_sprite(player);
 }
 
-void change_player_name(Player *player, const char *name) {
+void change_player_name(DisPlayer *player, const char *name) {
    snprintf(player->pName, sizeof(player->pName), "%s", name);
    change_player_health(player, player->health);
 }
 
-void change_player_health(Player *player, int health) {
+void change_player_health(DisPlayer *player, int health) {
    player->health = health;
    if(player->playerNum == USER) {
       change_healthbar(player);
@@ -199,7 +199,7 @@ void change_player_health(Player *player, int health) {
    display_player_health(player);
 }
 
-void change_player_stats(Player *player, const char *name, int health) {
+void change_player_stats(DisPlayer *player, const char *name, int health) {
    snprintf(player->pName, sizeof(player->pName), "%s", name); 
    player->health = health;
    if(player->playerNum == USER) {
@@ -210,11 +210,11 @@ void change_player_stats(Player *player, const char *name, int health) {
    display_player_health(player);
 }
 
-void change_player_turn(Player *player, int turn) {
+void change_player_turn(DisPlayer *player, int turn) {
    player->turn = turn;
 }
 
-void change_player_maxHealth(Player *player, int maxHealth) {
+void change_player_maxHealth(DisPlayer *player, int maxHealth) {
    player->maxHealth = maxHealth;
 }
 
@@ -231,7 +231,7 @@ void set_button_mode(Button *button, int mode) {
    }
 }
 
-void change_player_action(Player *player, char *action, int index, Button *button) {
+void change_player_action(DisPlayer *player, char *action, int index, Button *button) {
    if (index < 4) {
       snprintf(player->actions[index], sizeof(player->actions[index]), "%s", action);
       change_button_label(button, action);
@@ -241,7 +241,7 @@ void change_player_action(Player *player, char *action, int index, Button *butto
 
 }
 
-lv_obj_t* set_healthbar(Player *player)
+lv_obj_t* set_healthbar(DisPlayer *player)
 {
    lv_obj_t *bar = lv_bar_create(lv_scr_act());
    if (player->playerNum == OPPONENT) {
@@ -288,7 +288,7 @@ Button create_button(void (*callback)(int), lv_obj_t* screen, int x, int y, char
       return button;
 }
 
-void set_user_sprite(Player *player, const lv_img_dsc_t *img) {
+void set_user_sprite(DisPlayer *player, const lv_img_dsc_t *img) {
    if (player->sprite) {
       lv_obj_del(player->sprite);
       player->sprite = NULL;
@@ -346,9 +346,8 @@ void set_battle_scene(void) {
 
 /* button mask will set action 1 based on bit 0, 2 based on bit 1, so on and so forth
    0 = greyed out, 1 = available
-   */
 */
-void change_battle_scene(Player *P1, Player *P2, uint8_t button_mask) {
+void change_battle_scene(DisPlayer *P1, DisPlayer *P2, uint8_t button_mask) {
    if (scene != 1) { // battle scene was already set, no need to create a new one
       set_battle_scene();
    } 
@@ -488,6 +487,22 @@ void create_screen(void) {
    opponent.turn = 0;
    display.scr = lv_scr_act();
    change_connection_scene(0b111000111);
+
+   const struct device *display_dev;
+
+   display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+   if (!device_is_ready(display_dev)) {
+      return;
+   }
+
+   lv_timer_handler();
+   display_blanking_off(display_dev);
+
+   while (1) {
+      // uint32_t sleep_ms = lV_timer_handler();
+      lv_timer_handler();
+      k_sleep(K_MSEC(10));
+   }
 }
 
 #endif
