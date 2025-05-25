@@ -25,6 +25,5 @@ target_sources(app PRIVATE
         src/main.c
 
         src/ui/viewer.c
-        src/ui/rec_input.c
         ${IMG_FILES}
 )
