@@ -11,13 +11,14 @@
 #include <zephyr/random/random.h>
 #include <zephyr/sys/util.h>
 
+
 #ifndef MY_UUID
 #define MY_UUID 0xe1, 0xfd, 0x11, 0xdc
 #warning using default UUID
 #endif
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(fight);
+LOG_MODULE_REGISTER(fight, LOG_LEVEL_DBG);
 
 uint8_t fightAdData[] = {
     0xFF, 0xFF, // Vendor (Custom)
@@ -68,8 +69,8 @@ int fight_ad_waiting(const char* name) {
     return !update_advertisements();
 }
 
-int fight_ad_initiate(uint32_t opponentUUID, uint16_t fighter, uint8_t moves[]){
-    (*fightAd.sessionID) = sys_rand32_get();
+int fight_ad_initiate(uint32_t opponentUUID, uint32_t sessionID, uint16_t fighter, char moves[]){
+    (*fightAd.sessionID) = sessionID;
     (*fightAd.sequenceNumber)++;
     (*fightAd.command) = FC_INITIATE;
 
@@ -86,7 +87,7 @@ int fight_ad_initiate(uint32_t opponentUUID, uint16_t fighter, uint8_t moves[]){
     return !update_advertisements();
 }
 
-int fight_ad_accept(uint32_t opponentUUID, uint32_t sessionID, uint16_t fighter, uint8_t moves[]){
+int fight_ad_accept(uint32_t opponentUUID, uint32_t sessionID, uint16_t fighter, char moves[]){
     (*fightAd.sessionID) = sessionID;
     (*fightAd.sequenceNumber)++;
     (*fightAd.command) = FC_ACCEPT;

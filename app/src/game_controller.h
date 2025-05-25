@@ -4,13 +4,16 @@
 
 #ifndef GAME_CONTROLLER_H
 #define GAME_CONTROLLER_H
+#include <fight.h>
 #include <stdint.h>
 
 typedef struct {
-    int (*buttonPressed)(int id);
-    int (*waiting)(uint32_t opponentUUID, uint32_t sessionID, const char* name);
-    int (*move)(int i);
-    int (*fled)(void);
+    Player* player;
+    int (*waiting)(uint32_t uuid, uint16_t seq, const char *name);
+    int (*initiate)(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]);
+    int (*accept)(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]);
+    int (*move)(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i);
+    int (*fled)(uint32_t uuid, uint16_t seq, uint32_t sessionID);
 } PlayerController;
 
 typedef struct {
@@ -18,6 +21,6 @@ typedef struct {
     PlayerController opponent;
 } GameController;
 
-GameController* init_game(void);
+GameController *init_game(void);
 
 #endif //GAME_CONTROLLER_H

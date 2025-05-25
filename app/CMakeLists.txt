@@ -16,9 +16,9 @@ target_compile_definitions(app PRIVATE MY_UUID=${MY_UUID})
 target_include_directories(app PRIVATE src)
 target_sources(app PRIVATE
         src/fight_ad.c
-        src/fight_observer.c
         src/game_controller.c
         src/controller.c
         src/game.c
+        src/fight.c
         src/main.c
 )

@@ -4,31 +4,75 @@
 
 #include "game_controller.h"
 
-#include <stdlib.h>
+#include <fight_ad.h>
+#include "game.h"
+#include "bt/bluetooth.h"
+
+#include <zephyr/logging/log.h>
+LOG_MODULE_DECLARE(app);
 
 GameController controller;
 
-int game_button_pressed(int id) {
-    return 0;
+int player_waiting(uint32_t uuid, uint16_t seq, const char* name) {
+    int err = fight_ad_waiting(name);
+    if (err){
+        LOG_ERR("ad failed :\'(");
+        return err;
+    }
+    return register_waiting(uuid, seq, name);
 }
 
-int opponent_waiting(uint32_t opponentUUID, uint32_t sessionID, const char* name) {
-    return 0;
+int player_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]) {
+    int err = fight_ad_initiate(opponentUUID, sessionID, fighter, moves);
+    if (err){
+        LOG_ERR("ad failed :\'(");
+        return err;
+    }
+    return register_initiate(uuid, seq, opponentUUID, sessionID, fighter, moves);
+}
+
+int player_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]) {
+    int err = fight_ad_accept(opponentUUID, sessionID, fighter, moves);
+    if (err){
+        LOG_ERR("ad failed :\'(");
+        return err;
+    }
+    return register_accept(uuid, seq, opponentUUID, sessionID, fighter, moves);
+}
+
+int player_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID) {
+    int err = fight_ad_flee();
+    if (err){
+        LOG_ERR("ad failed :\'(");
+        return err;
+    }
+    return register_fled(uuid, seq, sessionID);
+}
+
+int player_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i) {
+    int err = fight_ad_move(i);
+    if (err){
+        LOG_ERR("ad failed :\'(");
+        return err;
+    }
+    return register_move(uuid, seq, sessionID, i);
 }
 
 GameController *init_game(void) {
     controller = (GameController){
         {
-            .buttonPressed = game_button_pressed,
-            .waiting = NULL,
-            .fled = NULL,
-            .move = NULL,
+            .waiting = player_waiting,
+            .initiate = player_initiate,
+            .accept = player_accept,
+            .fled = player_fled,
+            .move = player_move,
         },
         {
-            .buttonPressed = game_button_pressed,
-            .waiting = opponent_waiting,
-            .fled = NULL,
-            .move = NULL,
+            .waiting = register_waiting,
+            .initiate = register_initiate,
+            .accept = register_accept,
+            .fled = register_fled,
+            .move = register_move,
         }
     };
 

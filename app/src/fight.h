@@ -10,14 +10,16 @@ typedef struct {
     uint32_t uuid;
     char name[16];
     int sequenceNumber;
+    uint32_t challengee;
     int fighter;
     char moves[4];
 } Player;
 
 typedef struct {
-    Player players[2];
+    Player* players[2];
     uint32_t sessionID;
-    int moves[];
+    int moveCount;
+    int* moves;
 } Fight;
 
 #endif //FIGHT_H
