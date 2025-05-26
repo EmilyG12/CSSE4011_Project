@@ -5,6 +5,7 @@
 #ifndef GAME_CONTROLLER_H
 #define GAME_CONTROLLER_H
 #include <fight.h>
+#include <game.h>
 #include <stdint.h>
 
 typedef struct {
@@ -19,6 +20,7 @@ typedef struct {
 typedef struct {
     PlayerController me;
     PlayerController opponent;
+    Arena* arena;
 } GameController;
 
 GameController *init_game(void);

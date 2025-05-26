@@ -10,13 +10,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <zephyr/shell/shell.h>
+#include <zephyr/kernel.h>
 
 #include "fight_ad.h"
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_DECLARE(fight);
+LOG_MODULE_DECLARE(app);
 
-Arena arena;
+static Arena arena = {};
 
 Player* find_player(Player** players, int playerCount, uint32_t uuid) {
     for (int i = 0; i < playerCount; i++) {
@@ -28,7 +29,11 @@ Player* find_player(Player** players, int playerCount, uint32_t uuid) {
 }
 
 Player** add_player(Player** players, int* playerCount, Player* player) {
-    players = realloc(players, sizeof(Player*) * (*playerCount + 2));
+    if (players == NULL || *playerCount >= MAX_PLAYERS) {
+        LOG_INF("Failed to allocate memory for players");
+        return NULL;
+    }
+
     players[(*playerCount)++] = player;
     return players;
 }
@@ -63,38 +68,55 @@ Player* find_or_create(uint32_t uuid, uint16_t seq, const char* name) {
         }
     }
 
-    arena.players = realloc(arena.players, sizeof(Player*) * (arena.playerCount + 1));
     Player* player = malloc(sizeof(Player));
+    if (!player) {
+        LOG_ERR("Failed to allocate memory for player");
+        return NULL;
+    }
 
     player->uuid = uuid;
     player->sequenceNumber = seq - 1;
     name = name ? name : "<unknown>";
     strncpy(player->name, name, 16);
 
-    arena.players[arena.playerCount++] = player;
+    add_player(arena.players, &arena.playerCount, player);
 
     return player;
+}
+
+Arena* get_arena(void) {
+    return &arena;
 }
 
 int register_waiting(uint32_t uuid, uint16_t seq, const char* name) {
     LOG_DBG("register_waiting(uuid=0x%x, seq=%d, name=%s)", uuid, seq, name);
 
     Player* player = find_or_create(uuid, seq, name);
+    if (!player) {
+        LOG_ERR("new player couldn't be created");
+        return -1;
+    }
+
     if (player->sequenceNumber == seq) {
         return 0;
     }
+    uint16_t lastSeq = player->sequenceNumber;
+    player->sequenceNumber = seq;
 
     Player* known = find_player(arena.waitingPlayers, arena.waitingCount, uuid);
     if (!known) {
-        arena.waitingPlayers = add_player(arena.waitingPlayers, &arena.waitingCount, player);
+        add_player(arena.waitingPlayers, &arena.waitingCount, player);
         known = find_player(arena.waitingPlayers, arena.waitingCount, uuid);
     }
 
-    LOG_INF("[%s (%d->%d)]: uuid: 0x%x, Waiting to fight!",
-        known->name, known->sequenceNumber, seq, known->uuid);
-    player->sequenceNumber = seq;
+    if (!known) {
+        LOG_ERR("new player couldn't be added to the wait list");
+        return -1;
+    }
 
-    return 0;
+    LOG_INF("[%s (%d->%d)]: uuid: 0x%x, Waiting to fight!",
+        known->name, lastSeq, known->sequenceNumber, known->uuid);
+    return 1;
 }
 
 int register_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]) {
@@ -102,15 +124,27 @@ int register_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32
           uuid, seq, opponentUUID, sessionID, fighter, moves[0], moves[1], moves[2], moves[3]);
 
     Player* player = find_or_create(uuid, seq, NULL);
+    if (!player) {
+        LOG_ERR("failed to find or create player");
+        return -1;
+    }
+
     if (player->sequenceNumber == seq) {
         return 0;
     }
+    uint16_t lastSeq = player->sequenceNumber;
+    player->sequenceNumber = seq;
 
     Player* known = find_player(arena.pendingPlayers, arena.pendingCount, uuid);
     if (!known) {
         remove_player(arena.waitingPlayers, &arena.waitingCount, player);
-        arena.pendingPlayers = add_player(arena.pendingPlayers, &arena.pendingCount, player);
+        add_player(arena.pendingPlayers, &arena.pendingCount, player);
         known = find_player(arena.pendingPlayers, arena.pendingCount, uuid);
+    }
+
+    if (!known) {
+        LOG_ERR("new player couldn't be added to the pending list");
+        return -1;
     }
 
     known->challengee = opponentUUID;
@@ -118,10 +152,8 @@ int register_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32
     memcpy(known->moves, moves, 4);
 
     LOG_INF("[%s (%d->%d)]: Initiated a duel (uuid: 0x%x)(session: 0x%x)",
-        known->name, known->sequenceNumber, seq, known->uuid, sessionID);
-    player->sequenceNumber = seq;
-
-    return 0;
+        known->name, lastSeq, known->sequenceNumber, known->uuid, sessionID);
+    return 1;
 }
 
 int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]) {
@@ -129,9 +161,16 @@ int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
             uuid, seq, opponentUUID, sessionID, fighter, moves[0], moves[1], moves[2], moves[3]);
 
     Player* player = find_or_create(uuid, seq, NULL);
+    if (!player) {
+        LOG_ERR("failed to find or create player");
+        return -1;
+    }
+
     if (player->sequenceNumber == seq) {
         return 0;
     }
+    uint16_t lastSeq = player->sequenceNumber;
+    player->sequenceNumber = seq;
 
     Fight* fight = find_fight(arena.fights, arena.fightCount, sessionID);
     if (!fight) {
@@ -155,17 +194,13 @@ int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
             .players[1] = player,
             .sessionID = sessionID,
             .moveCount = 0,
-            .moves = NULL
         };
-        arena.fights = realloc(arena.fights, (arena.fightCount + 1) * sizeof(Fight));
         arena.fights[arena.fightCount++] = newFight;
     }
 
-    // LOG_INF("[%s (%d->%d)]: Accepted a duel (uuid: 0x%x)(session: 0x%x)",
-    //     known->name, known->sequenceNumber, seq, known->uuid, sessionID);
-    player->sequenceNumber = seq;
-
-    return 0;
+    LOG_INF("[%s (%d->%d)]: Accepted a duel (uuid: 0x%x)(session: 0x%x)",
+        player->name, lastSeq, player->sequenceNumber, player->uuid, sessionID);
+    return 1;
 }
 
 int register_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int move) {
@@ -173,33 +208,36 @@ int register_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int move) {
               uuid, seq, sessionID, move);
 
     Player* player = find_or_create(uuid, seq, NULL);
+    if (!player) {
+        LOG_ERR("failed to find or create player");
+        return -1;
+    }
+
     if (player->sequenceNumber == seq) {
         return 0;
     }
+    player->sequenceNumber = seq;
 
     Fight* fight = find_fight(arena.fights, arena.fightCount, sessionID);
     if (!fight) {
         LOG_ERR("[%s: 0x%x] fought in an invalid fight", player->name, player->uuid);
         player->sequenceNumber = seq;
-        return 1;
+        return -2;
     }
 
     Player* known = find_player(fight->players, 2, uuid);
     if (!known) {
         LOG_ERR("[%s: 0x%x] fought in a fight they weren't in", player->name, player->uuid);
         player->sequenceNumber = seq;
-        return 2;
+        return -3;
     }
 
-    fight->moves = realloc(fight->moves, sizeof(char) * (fight->moveCount + 1));
     fight->moves[fight->moveCount++] = move;
 
     Player* opponent = (fight->players[0]->uuid == known->uuid) ? fight->players[1] : fight->players[0];
     LOG_INF("[%s: 0x%x] Performed a %d move against [%s: 0x%x]",
         known->name, known->uuid, move, opponent->name, opponent->uuid);
-
-    player->sequenceNumber = seq;
-    return 0;
+    return 1;
 }
 
 int register_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID) {
@@ -207,18 +245,22 @@ int register_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID) {
                 uuid, seq, sessionID);
     Fight* fight = find_fight(arena.fights, arena.fightCount, sessionID);
     if (!fight) {
-        return 1;
+        return -1;
     }
 
     Player* player = find_player(fight->players, 2, uuid);
     if (!player) {
-        return 2;
+        return -2;
     }
 
-    // TODO publish fight to web.
+    if (player->sequenceNumber == seq) {
+        return 0;
+    }
 
     player->sequenceNumber = seq;
-    return 0;
+
+    // TODO publish fight to web.
+    return 1;
 }
 
 void print_waiting(const struct shell* shell) {

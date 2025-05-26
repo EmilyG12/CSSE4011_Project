@@ -19,7 +19,7 @@ typedef struct {
     Player* players[2];
     uint32_t sessionID;
     int moveCount;
-    int* moves;
+    int moves[1];
 } Fight;
 
 #endif //FIGHT_H

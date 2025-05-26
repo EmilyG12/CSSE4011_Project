@@ -16,6 +16,7 @@ file(GLOB IMG_FILES ${PROJECT_SOURCE_DIR}/src/ui/images/*.c)
 if (DEFINED MY_UUID)
     target_compile_definitions(app PRIVATE MY_UUID=${MY_UUID})
 endif()
+
 target_include_directories(app PRIVATE src)
 target_sources(app PRIVATE
         src/fight_ad.c

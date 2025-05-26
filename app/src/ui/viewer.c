@@ -108,7 +108,8 @@ Display display;
 DisPlayer user;
 DisPlayer opponent;
 
-Button* buttons = NULL;
+Button buttons[9] = {};
+int buttonCount = 0;
 
 char generic_actions[4][20] = {"Attack", "Defend", "Heal", "Flee"};
 char generic_actions_2[4][20] = {"Condone", "Chide", "Murder", "Flee"}; 
@@ -278,7 +279,7 @@ void redirect_cb(lv_event_t *e) {
 }
 
 Button create_button(void (*callback)(int), lv_obj_t* screen, int x, int y, const char* label, int width, int height, int id, Button *button_ptr) {
-      lv_obj_t *btn = lv_button_create(screen);
+      lv_obj_t *btn = lv_obj_create(screen);
       lv_obj_t *txt = lv_label_create(btn);
       lv_obj_align(btn, LV_ALIGN_DEFAULT, x, y);
       lv_label_set_text(txt, label);
@@ -333,7 +334,6 @@ BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
 
    lv_obj_clean(display.scr);
 
-   buttons = realloc(buttons, sizeof(Button) * config->buttonCount);
    for (int i = 0; i < config->buttonCount; i++) {
       buttons[i] = create_button(config->buttons[i].callback, display.scr,
          0, BUTTON_POS_1Y + (BUTTON_HEIGHT * i),
@@ -341,6 +341,8 @@ BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
             80, 45, config->buttons[i].id, buttons + i
          );
    }
+
+   buttonCount = config->buttonCount;
 
    display.user_hlth = lv_label_create(display.scr);
    display.opponent_hlth = lv_label_create(display.scr);
@@ -381,11 +383,11 @@ void update_battle_scene(BattleSceneConfig* config) {
       init_battle_scene(config);
    }
 
-   buttons = realloc(buttons, sizeof(Button) * config->buttonCount);
    for (int i = 0; i < config->buttonCount; i++) {
       change_player_action(config->buttons[i].label, i, buttons + 1);
       set_button_mode(buttons + i, config->buttons[i].on);
    }
+   buttonCount = config->buttonCount;
 
    update_player(&user, config->me);
    update_player(&opponent, config->opponent);
@@ -396,10 +398,8 @@ ConnectionSceneConfig* init_connections_scene(ConnectionSceneConfig* config) {
 #ifndef CONFIG_LVGL
    LOG_ERR("screen not available");
 #else
-   LOG_INF("Changing to connection scene");
    lv_obj_clean(display.scr);
 
-   buttons = realloc(buttons, sizeof(Button) * config->buttonCount);
    for (int i = 0; i < config->buttonCount && i < 9; i++) {
       int x = 10 + (i / 3) * 100;
       int y = BUTTON_POS_1Y + (i % 3) * BUTTON_HEIGHT;
@@ -412,6 +412,7 @@ ConnectionSceneConfig* init_connections_scene(ConnectionSceneConfig* config) {
          buttons + i);
       set_button_mode(buttons + i, config->buttons[i].on);
    }
+   buttonCount = config->buttonCount;
 
    scene = 2;
 #endif
@@ -449,14 +450,10 @@ void init_screen(void) {
 }
 
 
-void update_screen(void) {
+int update_screen(void) {
 #ifdef CONFIG_LVGL
-   while (true) {
-      // int i = irq_lock();
-      int32_t next = (int32_t) lv_timer_handler();
-      // irq_unlock(i);
-      // LOG_INF("Updating screen next in: %dms", next);
-      k_msleep(next);
-   }
+      return (int) lv_timer_handler();
+#else
+   return 10;
 #endif
 }

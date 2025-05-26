@@ -5,12 +5,12 @@
 typedef struct {
     const char* label;
     int id;
-    bool on;
+    int on;
     void (*callback)(int id);
 } ButtonConfig;
 
 void init_screen(void);
-void update_screen(void);
+int update_screen(void);
 
 typedef struct {
     ButtonConfig* buttons;

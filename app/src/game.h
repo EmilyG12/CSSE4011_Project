@@ -7,17 +7,22 @@
 #include <stdint.h>
 #include "fight.h"
 
+#define MAX_PLAYERS 32
+
 typedef struct {
     int playerCount;
-    Player** players;
+    Player* players[MAX_PLAYERS];
     int waitingCount;
-    Player** waitingPlayers;
+    Player* waitingPlayers[MAX_PLAYERS / 2];
     int pendingCount;
-    Player** pendingPlayers;
+    Player* pendingPlayers[MAX_PLAYERS / 2];
     int fightCount;
-    Fight* fights;
+    Fight fights[MAX_PLAYERS / 4];
 } Arena;
 
+
+Arena* get_arena(void);
+Player* find_player(Player** players, int playerCount, uint32_t uuid);
 int register_waiting(uint32_t uuid, uint16_t seq, const char* name);
 int register_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]);
 int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]);

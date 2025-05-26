@@ -20,7 +20,7 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(fight, LOG_LEVEL_DBG);
 
-uint8_t fightAdData[] = {
+static uint8_t fightAdData[] = {
     0xFF, 0xFF, // Vendor (Custom)
     0xDE, 0xAD, // Device Type (Fight game)
     MY_UUID,

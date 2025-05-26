@@ -2,7 +2,6 @@
 // Created by Sioryn Willett on 2025-05-18.
 //
 
-#include <misc/lv_timer.h>
 #include <zephyr/shell/shell.h>
 #include "controller.h"
 #include "fight_ad.h"
@@ -33,29 +32,28 @@ int main(void) {
         return 1;
     }
 
-    if (bt_disable()){
-        LOG_ERR("Failed to disable bt");
+    game = init_game();
+    input_controller = init_input_controller(game);
+
+    if (!register_observer((Observer) {.filter = NULL, .callback = input_controller.observer})) {
+        LOG_ERR("Failed to initialise bt input");
         return 2;
     }
-
-    // game = init_game();
-    // input_controller = init_input_controller(game);
-
-    // if (!register_observer((Observer) {.filter = NULL, .callback = input_controller.observer})) {
-    //     LOG_ERR("Failed to initialise bt input");
-    //     return 2;
-    // }
 
     // TODO init the push buttons to call ic.buttonPressed
 
     init_screen();
-
     ButtonConfig buttons[] = {
         {.label = "button 1", .id = 1, .on = true, .callback = pingu},
         {.label = "button 2", .id = 2, .on = true, .callback = pingu},
     };
-    ConnectionSceneConfig config = {.buttons = buttons, .buttonCount = ARRAY_SIZE(buttons)};
+    ConnectionSceneConfig config = {
+        .buttons = buttons, .buttonCount = ARRAY_SIZE(buttons)
+    };
     init_connections_scene(&config);
 
-    update_screen();
+    while (true) {
+        int next = update_screen();
+        k_msleep(next);
+    }
 }
