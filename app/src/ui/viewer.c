@@ -392,7 +392,7 @@ void update_battle_scene(BattleSceneConfig* config) {
 #endif
 }
 
-ConnectionSceneConfig* init_connection_scene(ConnectionSceneConfig* config) {
+ConnectionSceneConfig* init_connections_scene(ConnectionSceneConfig* config) {
 #ifndef CONFIG_LVGL
    LOG_ERR("screen not available");
 #else
@@ -434,18 +434,6 @@ void init_screen(void) {
       return;
    }
 
-   // PlayerDisplayConfig pconfig = {
-   //    .name = "alice",
-   // };
-   // initialise_player(&user, &pconfig);
-   // pconfig.name = "bob";
-   // initialise_player(&opponent, &pconfig);
-
-   // ConnectionSceneConfig config = {
-   //    .buttonCount = 0,
-   //    .buttons = NULL,
-   // };
-   // init_connection_scene(&config);
    display.scr = lv_scr_act();
 
    display_blanking_off(display_dev);

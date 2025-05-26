@@ -22,6 +22,10 @@ int cmd_fight(const struct shell* shell, int argc, char *argv[]) {
 SHELL_CMD_REGISTER(fight, NULL, "Start a fight with a nearby player", cmd_fight);
 
 
+void pingu(int id) {
+    LOG_INF("Pingu: %d", id);
+}
+
 int main(void) {
     if (init_fight_bt()) {
         LOG_ERR("Failed to initialize fight ad");
@@ -39,5 +43,12 @@ int main(void) {
     // TODO init the push buttons to call ic.buttonPressed
 
     init_screen();
+
+    ButtonConfig buttons[] = {
+        {.label = "button 1", .id = 1, .on = true, .callback = pingu},
+        {.label = "button 2", .id = 2, .on = true, .callback = pingu},
+    };
+    ConnectionSceneConfig config = {.buttons = buttons, .buttonCount = ARRAY_SIZE(buttons)};
+    init_connections_scene(&config);
     return 0;
 }
