@@ -270,6 +270,7 @@ lv_obj_t* set_healthbar(DisPlayer *player){
 }
 
 void redirect_cb(lv_event_t *e) {
+   LOG_INF("button pressed!");
    Button *btn = (Button *)lv_event_get_user_data(e);
    if (btn->set) {
       btn->callback(btn->id);
@@ -304,18 +305,18 @@ void update_player(DisPlayer* player, PlayerDisplayConfig config) {
 }
 
 
-void lvgl_update_thread(void) {
-   while (1) {
-      if (scene) {
-         lv_timer_handler();
-      }
-      k_sleep(K_MSEC(100));
-   }
-}
+// void lvgl_update_thread(void) {
+//    while (1) {
+//       if (scene) {
+//          lv_timer_handler();
+//       }
+//       k_sleep(K_MSEC(10));
+//    }
+// }
 
 // #define RESTART_INTERVAL_MS 200
 // #define STACK_SIZE 1024
-// #define THREAD_PRIORITY 7
+// #define THREAD_PRIORITY 5
 // #define MAX_WAIT_US 30000
 // K_THREAD_DEFINE(lvgl_update, STACK_SIZE,
 //     lvgl_update_thread, NULL, NULL, NULL,
@@ -330,12 +331,11 @@ BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
    initialise_player(&user, &config->me);
    initialise_player(&opponent, &config->opponent);
 
-   scene = 1;
    lv_obj_clean(display.scr);
 
-   buttons = realloc(config->buttons, sizeof(Button) * config->buttonCount);
+   buttons = realloc(buttons, sizeof(Button) * config->buttonCount);
    for (int i = 0; i < config->buttonCount; i++) {
-      create_button(config->buttons[i].callback, display.scr,
+      buttons[i] = create_button(config->buttons[i].callback, display.scr,
          0, BUTTON_POS_1Y + (BUTTON_HEIGHT * i),
             config->buttons[i].label,
             80, 45, config->buttons[i].id, buttons + i
@@ -365,7 +365,7 @@ BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
    /* setting initial sprites */
    set_user_sprite(&user, user.sprite_img);
    set_user_sprite(&opponent, opponent.sprite_img);
-   lv_timer_handler();
+   scene = 1;
 #endif
    return config;
 }
@@ -381,6 +381,7 @@ void update_battle_scene(BattleSceneConfig* config) {
       init_battle_scene(config);
    }
 
+   buttons = realloc(buttons, sizeof(Button) * config->buttonCount);
    for (int i = 0; i < config->buttonCount; i++) {
       change_player_action(config->buttons[i].label, i, buttons + 1);
       set_button_mode(buttons + i, config->buttons[i].on);
@@ -388,7 +389,6 @@ void update_battle_scene(BattleSceneConfig* config) {
 
    update_player(&user, config->me);
    update_player(&opponent, config->opponent);
-   lv_timer_handler();
 #endif
 }
 
@@ -399,14 +399,21 @@ ConnectionSceneConfig* init_connections_scene(ConnectionSceneConfig* config) {
    LOG_INF("Changing to connection scene");
    lv_obj_clean(display.scr);
 
+   buttons = realloc(buttons, sizeof(Button) * config->buttonCount);
    for (int i = 0; i < config->buttonCount && i < 9; i++) {
       int x = 10 + (i / 3) * 100;
       int y = BUTTON_POS_1Y + (i % 3) * BUTTON_HEIGHT;
-      buttons[i] = create_button(config->buttons[i].callback, display.scr, x, y, "Connect", 90, 45, i , buttons + i);
+      buttons[i] = create_button(config->buttons[i].callback,
+         display.scr,
+         x, y,
+         config->buttons[i].label,
+         90, 45,
+         config->buttons[i].id,
+         buttons + i);
       set_button_mode(buttons + i, config->buttons[i].on);
-      change_button_label(buttons + i, config->buttons[i].label);
    }
-   lv_timer_handler();
+
+   scene = 2;
 #endif
    return config;
 }
@@ -438,5 +445,18 @@ void init_screen(void) {
 
    display_blanking_off(display_dev);
    lv_timer_handler();
+#endif
+}
+
+
+void update_screen(void) {
+#ifdef CONFIG_LVGL
+   while (true) {
+      // int i = irq_lock();
+      int32_t next = (int32_t) lv_timer_handler();
+      // irq_unlock(i);
+      // LOG_INF("Updating screen next in: %dms", next);
+      k_msleep(next);
+   }
 #endif
 }

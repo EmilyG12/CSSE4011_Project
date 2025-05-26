@@ -10,6 +10,7 @@ typedef struct {
 } ButtonConfig;
 
 void init_screen(void);
+void update_screen(void);
 
 typedef struct {
     ButtonConfig* buttons;
