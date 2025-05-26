@@ -36,14 +36,8 @@ int main(void) {
         return 2;
     }
 
-    // if (!register_observer((Observer) {.filter = NULL, .callback = fight_ad_observe_arena})) {
-    //     LOG_ERR("Failed to initialise bt observers");
-    //     return 3;
-    // }
-
     // TODO init the push buttons to call ic.buttonPressed
 
-
-    create_screen();
+    init_screen();
     return 0;
 }

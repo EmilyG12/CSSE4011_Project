@@ -1,3 +1,4 @@
+#ifdef CONFIG_LVGL
 #ifdef __has_include
     #if __has_include("lvgl.h")
         #ifndef LV_LVGL_H_INCLUDE_SIMPLE
@@ -225,3 +226,4 @@ const lv_image_dsc_t mewback = {
   .data_size = 9216 * 3,
   .data = mewback_map,
 };
+#endif

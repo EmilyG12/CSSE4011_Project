@@ -1,3 +1,4 @@
+#ifdef CONFIG_LVGL
 #ifdef __has_include
     #if __has_include("lvgl.h")
         #ifndef LV_LVGL_H_INCLUDE_SIMPLE
@@ -513,3 +514,4 @@ const lv_image_dsc_t bGround = {
   .data_size = 76800 * 3,
   .data = bGround_map,
 };
+#endif

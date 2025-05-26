@@ -1,9 +1,33 @@
 #include "viewer.h"
-#define POKEMON_COUNT 8
+#include <fight.h>
+
+#include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(app);
 
-#if defined(CONFIG_LVGL)
-/* declaring all possible images/characters available*/
+#ifdef CONFIG_LVGL
+#include <zephyr/kernel.h>
+#include <zephyr/drivers/display.h>
+#include <lvgl.h>
+#include <lvgl_mem.h>
+
+#define POKEMON_COUNT 8
+
+#define WIDTH 295
+#define HEIGHT 220
+#define REAL_WIDTH 3
+#define REAL_HEIGHT 4
+#define HALF_STAR_W 15
+
+#define BUTTON_HEIGHT 50
+#define BUTTON_POS_1Y 20
+
+#define P2X 170
+#define P2Y 30
+#define P1X 110
+#define P1Y 190
+
+#define USER 1
+#define OPPONENT 2
 
 LV_IMG_DECLARE(battleground_b);
 
@@ -26,38 +50,65 @@ LV_IMG_DECLARE(clefback);
 LV_IMG_DECLARE(mewfront);
 LV_IMG_DECLARE(mewback);
 
-Sprite charmander = {"charmander", &charfront, &charback};
-Sprite squirtle = {"squirtle", &squirtfront, &squirtback};
-Sprite bulbasaur = {"bulbasaur", &bulbafront, &bulbaback};
-Sprite pidgey = {"pidgey", &pidgefront, &pidgeback};
-Sprite pikachu = {"pikachu", &pikafront, &pikaback};
-Sprite clefairy = {"clefairy", &cleffront, &clefback};
-Sprite mew = {"mew", &mewfront, &mewback};
-Sprite poliwhirl = {"poliwhirl", &polifront, &poliback};
-Sprite *sprites[POKEMON_COUNT] = {&charmander, &squirtle, &bulbasaur, &pidgey, &pikachu, &clefairy, &mew, &poliwhirl};
+typedef struct {
+   const char name[32];
+   const lv_img_dsc_t *front;
+   const lv_img_dsc_t *back;
+} Sprite;
 
-/* end of declarations */
-#endif
+typedef struct {
+   lv_obj_t *scr;
+   lv_obj_t *user_hlth;
+   lv_obj_t *opponent_hlth;
+   lv_obj_t *opp_hlthbar;
+   lv_obj_t *user_hlthbar;
+} Display;
+
+typedef struct {
+   lv_obj_t *button;
+   lv_obj_t *label;
+   int set;
+   int id;
+   void (*callback)(int id);
+} Button;
+
+typedef struct {
+   int health;
+   char pName[32];
+   int playerNum;
+   int maxHealth;
+   int turn;
+   lv_obj_t *sprite;
+   const lv_img_dsc_t *sprite_img;
+} DisPlayer;
+
+
+Sprite sprites[POKEMON_COUNT] = {
+   {"charmander", &charfront, &charback},
+   {"squirtle", &squirtfront, &squirtback},
+   {"bulbasaur", &bulbafront, &bulbaback},
+   {"pidgey", &pidgefront, &pidgeback},
+   {"pikachu", &pikafront, &pikaback},
+   {"clefairy", &cleffront, &clefback},
+   {"mew", &mewfront, &mewback},
+   {"poliwhirl", &polifront, &poliback}
+};
+
+Sprite* find_sprite(const char* name) {
+   for (int i = 0; i < POKEMON_COUNT; i++) {
+      if (!strcmp(name, sprites[i].name)) {
+         return sprites + i;
+      }
+   }
+
+   return NULL;
+}
 
 Display display;
 DisPlayer user;
 DisPlayer opponent;
 
-Button b1;
-Button b2;
-Button b3;
-Button b4;
-
-/* CONNECTION BUTTONS -- button.setting could be used to imply which connection number is being referred to -- putting that ID into callback*/
-Button c1;
-Button c2;
-Button c3;
-Button c4;
-Button c5;
-Button c6;
-Button c7;
-Button c8;
-Button c9;
+Button* buttons = NULL;
 
 char generic_actions[4][20] = {"Attack", "Defend", "Heal", "Flee"};
 char generic_actions_2[4][20] = {"Condone", "Chide", "Murder", "Flee"}; 
@@ -75,54 +126,6 @@ Basic logic on what should be called:
 b1, b2, b3, b4 are battle scene buttons
 TODO: a1-10 will be connection buttons (lists top 10 connections, names them, and upon pressing changes ad for m5)
 */
-
-#if defined(CONFIG_LVGL)
-/* SIORYN - ALL CALLBACKS HERE */
-static void action_1(int e)
-{
-
-   // Button *btn = (Button *)lv_event_get_user_data(e);
-   // if (btn->set) {
-   change_player_health(&user, 50);
-   change_player_health(&opponent, 75);
-   LOG_INF("action 1");
-   // }
-
-}
-
-static void action_2(int e)
-{
-
-   change_connection_scene(0b101000101);
-
-}
-
-static void action_3(int e)
-{
-   DisPlayer newPlayer;
-   initialise_player(&newPlayer, USER, "charmander", 100, generic_actions_2);
-   change_battle_scene(&newPlayer, &opponent, 0b1101);
-   LOG_INF("action 3");
-
-}
-
-static void action_4(int e)
-{
-
-   set_button_mode(&b1, 0);
-   set_user_sprite(&user, &charback);
-   LOG_INF("action 4");
-
-}
-
-static void connection(int e) {
-   //knowing e is an int referring to the connection number, something something something connect to connection 'x' through some math to get what 'x' is knowing the ID
-   //assume the connection list is in order of connection number
-
-   change_battle_scene(&user, &opponent, 0b1111);
-}
-
-/* NO MORE CALLBACKS */
 
 void change_healthbar(DisPlayer *player) {
    int health_set = 100;
@@ -149,44 +152,39 @@ void display_player_health(DisPlayer *player) {
    }
 }
 
-void set_player_sprite(DisPlayer *player) {
-   int found = 0;
-   for (int i = 0; i < POKEMON_COUNT; i++) {
-      if (!strcmp(player->pName, sprites[i]->name)) {
-         if (player->playerNum == OPPONENT) {
-            player->sprite_img = sprites[i]->front;
-         } else if (player->playerNum == USER) {
-            player->sprite_img = sprites[i]->back;
-         }
-         found = 1;
-         break;
-      }
+void set_user_sprite(DisPlayer *player, const lv_img_dsc_t * img) {
+   if (player->sprite) {
+      lv_obj_del(player->sprite);
+      player->sprite = NULL;
    }
-   if (found) {
+   player->sprite = lv_img_create(display.scr);
+   lv_img_set_src(player->sprite, player->sprite_img);
+   if (player->playerNum == USER) {
+      lv_obj_align(player->sprite, LV_ALIGN_DEFAULT, P1X, P1Y - 76);
+   } else if (player->playerNum == OPPONENT) {
+      lv_obj_align(player->sprite, LV_ALIGN_DEFAULT, P2X, P2Y);
+   }
+}
+
+void set_player_sprite(DisPlayer *player, PlayerDisplayConfig* config) {
+   Sprite *sprite = find_sprite(config->spriteName);
+   if (sprite) {
+      player->sprite_img = player->playerNum == USER ? sprite->back : sprite->front;
       set_user_sprite(player, player->sprite_img);
    } else {
       set_user_sprite(player, &bulbaback);
       LOG_ERR("Sprite not found");
    }
-   set_user_sprite(player, player->sprite_img);
 }
 
-void initialise_player(DisPlayer *player, int playerNum, const char name[], int maxHealth, char actions[4][20]) {
-   player->playerNum = playerNum;
-   strncpy(player->pName, name, sizeof(player->pName) - 1);
-   player->maxHealth = maxHealth;
-   player->health = maxHealth;
-   for (int i = 0; i < 4; i++) {
-      snprintf(player->actions[i], sizeof(player->actions[i]), "%s", actions[i]);
-   }
+void initialise_player(DisPlayer *player, PlayerDisplayConfig *config) {
+   player->playerNum = config->playerNum;
+   strncpy(player->pName, config->name, strlen(config->name));
+   player->maxHealth = config->healthMax;
+   player->health = config->health;
    player->sprite = NULL;
    player->turn = 1;
-   set_player_sprite(player);
-}
-
-void change_player_name(DisPlayer *player, const char *name) {
-   snprintf(player->pName, sizeof(player->pName), "%s", name);
-   change_player_health(player, player->health);
+   set_player_sprite(player, config);
 }
 
 void change_player_health(DisPlayer *player, int health) {
@@ -197,6 +195,11 @@ void change_player_health(DisPlayer *player, int health) {
       change_healthbar(player);
    }
    display_player_health(player);
+}
+
+void change_player_name(DisPlayer *player, const char *name) {
+   snprintf(player->pName, sizeof(player->pName), "%s", name);
+   change_player_health(player, player->health);
 }
 
 void change_player_stats(DisPlayer *player, const char *name, int health) {
@@ -218,22 +221,29 @@ void change_player_maxHealth(DisPlayer *player, int maxHealth) {
    player->maxHealth = maxHealth;
 }
 
-void change_button_label(Button *button, char *label) {
+void change_button_label(Button *button, const char *label) {
+#ifndef CONFIG_LVGL
+   LOG_ERR("screen not available");
+#else
    lv_label_set_text(button->label, label);
+#endif
 }
 
 void set_button_mode(Button *button, int mode) {
+#ifndef CONFIG_LVGL
+   LOG_ERR("screen not available");
+#else
    button->set = mode;
    if (!mode) {
       lv_obj_set_style_bg_color(button->button, lv_palette_main(LV_PALETTE_GREY), 0);
    } else {
       lv_obj_set_style_bg_color(button->button, lv_palette_main(LV_PALETTE_BLUE), 0); 
    }
+#endif
 }
 
-void change_player_action(DisPlayer *player, char *action, int index, Button *button) {
+void change_player_action(const char *action, int index, Button *button) {
    if (index < 4) {
-      snprintf(player->actions[index], sizeof(player->actions[index]), "%s", action);
       change_button_label(button, action);
    } else {
       LOG_ERR("Index out of bounds");
@@ -241,8 +251,7 @@ void change_player_action(DisPlayer *player, char *action, int index, Button *bu
 
 }
 
-lv_obj_t* set_healthbar(DisPlayer *player)
-{
+lv_obj_t* set_healthbar(DisPlayer *player){
    lv_obj_t *bar = lv_bar_create(lv_scr_act());
    if (player->playerNum == OPPONENT) {
       lv_obj_align(bar, LV_ALIGN_DEFAULT, P2X, P2Y); 
@@ -258,7 +267,6 @@ lv_obj_t* set_healthbar(DisPlayer *player)
       LOG_ERR("Invalid player number");
       return NULL;
    }
-
 }
 
 void redirect_cb(lv_event_t *e) {
@@ -268,7 +276,7 @@ void redirect_cb(lv_event_t *e) {
    }
 }
 
-Button create_button(void (*callback)(int), lv_obj_t* screen, int x, int y, char* label, int width, int height, int id, Button *button_ptr) {
+Button create_button(void (*callback)(int), lv_obj_t* screen, int x, int y, const char* label, int width, int height, int id, Button *button_ptr) {
       lv_obj_t *btn = lv_button_create(screen);
       lv_obj_t *txt = lv_label_create(btn);
       lv_obj_align(btn, LV_ALIGN_DEFAULT, x, y);
@@ -288,37 +296,52 @@ Button create_button(void (*callback)(int), lv_obj_t* screen, int x, int y, char
       return button;
 }
 
-void set_user_sprite(DisPlayer *player, const lv_img_dsc_t *img) {
-   if (player->sprite) {
-      lv_obj_del(player->sprite);
-      player->sprite = NULL;
-   }
-   player->sprite_img = img;      
-   player->sprite = lv_img_create(display.scr);
-   lv_img_set_src(player->sprite, img);
-   if (player->playerNum == USER) {
-      lv_obj_align(player->sprite, LV_ALIGN_DEFAULT, P1X, P1Y - 76);
-   } else if (player->playerNum == OPPONENT) {
-      lv_obj_align(player->sprite, LV_ALIGN_DEFAULT, P2X, P2Y);
+void update_player(DisPlayer* player, PlayerDisplayConfig config) {
+   change_player_maxHealth(player, config.healthMax);
+   change_player_turn(player, config.turn);
+   change_player_stats(player, config.name, config.health);
+   // set_user_sprite(player, player->sprite_img);
+}
+
+
+void lvgl_update_thread(void) {
+   while (1) {
+      if (scene) {
+         lv_timer_handler();
+      }
+      k_sleep(K_MSEC(100));
    }
 }
 
-void set_battle_scene(void) {
+// #define RESTART_INTERVAL_MS 200
+// #define STACK_SIZE 1024
+// #define THREAD_PRIORITY 7
+// #define MAX_WAIT_US 30000
+// K_THREAD_DEFINE(lvgl_update, STACK_SIZE,
+//     lvgl_update_thread, NULL, NULL, NULL,
+//     THREAD_PRIORITY, 0, 0);
 
-   initialise_player(&user, USER, user.pName, user.maxHealth, user.actions);
-   initialise_player(&opponent, OPPONENT, opponent.pName, opponent.maxHealth, opponent.actions);
+#endif
 
-   /* Clear screen, set flags to imply on battle scene*/
+BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
+#ifndef CONFIG_LVGL
+   LOG_ERR("screen not available");
+#else
+   initialise_player(&user, &config->me);
+   initialise_player(&opponent, &config->opponent);
+
    scene = 1;
    lv_obj_clean(display.scr);
 
-   /* Creating buttons for battle scene */
-   b1 = create_button(action_1, display.scr, 0, BUTTON_POS_1Y, user.actions[0], 80, 45, ACT1_ID, &b1);
-   b2 = create_button(action_2, display.scr, 0, BUTTON_POS_1Y + BUTTON_HEIGHT, user.actions[1], 80, 45, ACT2_ID, &b2);
-   b3 = create_button(action_3, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), user.actions[2], 80, 45, ACT3_ID, &b3);
-   b4 = create_button(action_4, display.scr, 0, BUTTON_POS_1Y + (BUTTON_HEIGHT * 3), user.actions[3], 80, 45, ACT4_ID, &b4);
+   buttons = realloc(config->buttons, sizeof(Button) * config->buttonCount);
+   for (int i = 0; i < config->buttonCount; i++) {
+      create_button(config->buttons[i].callback, display.scr,
+         0, BUTTON_POS_1Y + (BUTTON_HEIGHT * i),
+            config->buttons[i].label,
+            80, 45, config->buttons[i].id, buttons + i
+         );
+   }
 
-   /* setting player and opponent healthbars/health/name text */
    display.user_hlth = lv_label_create(display.scr);
    display.opponent_hlth = lv_label_create(display.scr);
    lv_obj_set_style_text_color(display.user_hlth, lv_color_black(), 0);
@@ -342,132 +365,54 @@ void set_battle_scene(void) {
    /* setting initial sprites */
    set_user_sprite(&user, user.sprite_img);
    set_user_sprite(&opponent, opponent.sprite_img);
+   lv_timer_handler();
+#endif
+   return config;
 }
 
 /* button mask will set action 1 based on bit 0, 2 based on bit 1, so on and so forth
    0 = greyed out, 1 = available
 */
-void change_battle_scene(DisPlayer *P1, DisPlayer *P2, uint8_t button_mask) {
-   if (scene != 1) { // battle scene was already set, no need to create a new one
-      set_battle_scene();
-   } 
-   change_player_action(&user, P1->actions[0], 0, &b1); 
-   change_player_action(&user, P1->actions[1], 1, &b2);    
-   change_player_action(&user, P1->actions[2], 2, &b3); 
-   change_player_action(&user, P1->actions[3], 3, &b4);
-   set_button_mode(&b1, (button_mask >> 0) & 1);
-   set_button_mode(&b2, (button_mask >> 1) & 1);
-   set_button_mode(&b3, (button_mask >> 2) & 1);
-   set_button_mode(&b4, (button_mask >> 3) & 1);
-   change_player_maxHealth(&user, P1->maxHealth);
-   change_player_maxHealth(&opponent, P2->maxHealth);
-   change_player_turn(&user, P1->turn);
-   change_player_turn(&opponent, P2->turn);
-   change_player_stats(&user, P1->pName, P1->health);
-   change_player_stats(&opponent, P2->pName, P2->health);
-   set_user_sprite(&user, P1->sprite_img);
-   set_user_sprite(&opponent, P2->sprite_img);
+void update_battle_scene(BattleSceneConfig* config) {
+#ifndef CONFIG_LVGL
+   LOG_ERR("screen not available");
+#else
+   if (scene != 1) {
+      init_battle_scene(config);
+   }
+
+   for (int i = 0; i < config->buttonCount; i++) {
+      change_player_action(config->buttons[i].label, i, buttons + 1);
+      set_button_mode(buttons + i, config->buttons[i].on);
+   }
+
+   update_player(&user, config->me);
+   update_player(&opponent, config->opponent);
+   lv_timer_handler();
+#endif
 }
 
-/* Connections variable basically implies which connections are to be not greyed out: so 010010101 will show that connections 2, 5, 7 
-   and 9 are available. 
-*/
-void change_connection_scene(uint32_t connections) {
-   if (scene != 2) {
-      LOG_INF("Changing to connection scene");
-      lv_obj_clean(display.scr);
-      c1 = create_button(connection, display.scr, 10, BUTTON_POS_1Y, "Connect", 90, 45, CONN1_ID , &c1);
-      c4 = create_button(connection, display.scr, 10, BUTTON_POS_1Y + BUTTON_HEIGHT, "Connect", 90, 45, CONN2_ID , &c4);
-      c7 = create_button(connection, display.scr, 10, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), "Connect", 90, 45, CONN3_ID , &c7);
-      c2 = create_button(connection, display.scr, 110, BUTTON_POS_1Y, "Connect", 90, 45, CONN4_ID , &c2);
-      c5 = create_button(connection, display.scr, 110, BUTTON_POS_1Y + BUTTON_HEIGHT, "Connect", 90, 45, CONN4_ID , &c5);
-      c8 = create_button(connection, display.scr, 110, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), "Connect", 90, 45, CONN4_ID , &c8);
-      c3 = create_button(connection, display.scr, 210, BUTTON_POS_1Y, "Connect", 90, 45, CONN4_ID , &c3);
-      c6 = create_button(connection, display.scr, 210, BUTTON_POS_1Y + BUTTON_HEIGHT, "Connect", 90, 45, CONN4_ID , &c6);
-      c9 = create_button(connection, display.scr, 210, BUTTON_POS_1Y + (BUTTON_HEIGHT * 2), "Connect", 90, 45, CONN4_ID , &c9);
-      scene = 2;
+ConnectionSceneConfig* init_connection_scene(ConnectionSceneConfig* config) {
+#ifndef CONFIG_LVGL
+   LOG_ERR("screen not available");
+#else
+   LOG_INF("Changing to connection scene");
+   lv_obj_clean(display.scr);
+
+   for (int i = 0; i < config->buttonCount && i < 9; i++) {
+      int x = 10 + (i / 3) * 100;
+      int y = BUTTON_POS_1Y + (i % 3) * BUTTON_HEIGHT;
+      buttons[i] = create_button(config->buttons[i].callback, display.scr, x, y, "Connect", 90, 45, i , buttons + i);
+      set_button_mode(buttons + i, config->buttons[i].on);
+      change_button_label(buttons + i, config->buttons[i].label);
    }
-   for (int i = 0; i < 9; i++) {
-      int x = (connections >> i) & 1;
-      if (x) {
-         switch (i) {
-            case 0:
-               set_button_mode(&c1, 1);
-               change_button_label(&c1, "Available");
-               break;
-            case 1:
-               set_button_mode(&c2, 1);
-               change_button_label(&c2, "Available");
-               break;
-            case 2:
-               set_button_mode(&c3, 1);
-               change_button_label(&c3, "Available");
-               break;
-            case 3:
-               set_button_mode(&c4, 1);
-               change_button_label(&c4, "Available");
-               break;
-            case 4:
-               set_button_mode(&c5, 1);
-               change_button_label(&c5, "Available");
-               break;
-            case 5:
-               set_button_mode(&c6, 1);
-               change_button_label(&c6, "Available");
-               break;
-            case 6:
-               set_button_mode(&c7, 1);
-               change_button_label(&c7, "Available");
-               break;
-            case 7:
-               set_button_mode(&c8, 1);
-               change_button_label(&c8, "Available");
-               break;
-            case 8:
-               set_button_mode(&c9, 1);
-               change_button_label(&c9, "Available");
-               break;
-         }
-      } else {
-         switch (i) {
-            case 0:
-               set_button_mode(&c1, 0);
-               change_button_label(&c1, "Unavailable");
-               break;
-            case 1:
-               set_button_mode(&c2, 0);
-               change_button_label(&c2, "Unavailable");
-               break;
-            case 2:
-               set_button_mode(&c3, 0);
-               change_button_label(&c3, "Unavailable");
-               break;
-            case 3:
-               set_button_mode(&c4, 0);
-               change_button_label(&c4, "Unavailable");
-               break;
-            case 4:
-               set_button_mode(&c5, 0);
-               change_button_label(&c5, "Unavailable");
-               break;
-            case 5:
-               set_button_mode(&c6, 0);
-               change_button_label(&c6, "Unavailable");
-               break;
-            case 6:
-               set_button_mode(&c7, 0);
-               change_button_label(&c7, "Unavailable");
-               break;
-            case 7:
-               set_button_mode(&c8, 0);
-               change_button_label(&c8, "Unavailable");
-               break;
-            case 8:
-               set_button_mode(&c9, 0);
-               change_button_label(&c9, "Unavailable");
-         }
-      }
-   }
+   lv_timer_handler();
+#endif
+   return config;
+}
+
+void update_connections_scene(ConnectionSceneConfig* config) {
+   init_connections_scene(config);
 }
 
 //TODO: make a list of buttons for each action DONE
@@ -480,29 +425,30 @@ void change_connection_scene(uint32_t connections) {
 
 /* Adds the background image, icon image and coordinates.
 */
-void create_screen(void) {
-   initialise_player(&user, USER, "player1", 100, generic_actions);
-   initialise_player(&opponent, OPPONENT, "player2", 100, generic_actions);
-   user.turn = 1;
-   opponent.turn = 0;
-   display.scr = lv_scr_act();
-   change_connection_scene(0b111000111);
-
-   const struct device *display_dev;
-
-   display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
+void init_screen(void) {
+#ifndef CONFIG_LVGL
+   LOG_ERR("screen not available");
+#else
+   const struct device *display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
    if (!device_is_ready(display_dev)) {
       return;
    }
 
-   lv_timer_handler();
+   // PlayerDisplayConfig pconfig = {
+   //    .name = "alice",
+   // };
+   // initialise_player(&user, &pconfig);
+   // pconfig.name = "bob";
+   // initialise_player(&opponent, &pconfig);
+
+   // ConnectionSceneConfig config = {
+   //    .buttonCount = 0,
+   //    .buttons = NULL,
+   // };
+   // init_connection_scene(&config);
+   display.scr = lv_scr_act();
+
    display_blanking_off(display_dev);
-
-   while (1) {
-      // uint32_t sleep_ms = lV_timer_handler();
-      lv_timer_handler();
-      k_sleep(K_MSEC(10));
-   }
-}
-
+   lv_timer_handler();
 #endif
+}

@@ -1,3 +1,4 @@
+#ifdef CONFIG_LVGL
 #ifdef __has_include
     #if __has_include("lvgl.h")
         #ifndef LV_LVGL_H_INCLUDE_SIMPLE
@@ -91,3 +92,4 @@ const lv_image_dsc_t img_star = {
   .data_size = 870 * 3,
   .data = img_star_map,
 };
+#endif
