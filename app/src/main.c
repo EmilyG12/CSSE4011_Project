@@ -53,6 +53,7 @@ int main(void) {
     init_connections_scene(&config);
 
     while (true) {
+        process_queue();
         int next = update_screen();
         k_msleep(next);
     }

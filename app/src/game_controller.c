@@ -124,7 +124,7 @@ int opponent_waiting(uint32_t uuid, uint16_t seq, const char* name) {
 int opponent_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]) {
     int updated = register_initiate(uuid, seq, opponentUUID, sessionID, fighter, moves);
     if (updated > 0) {
-        update_waiting_screen();
+        // update_waiting_screen();
     }
     return updated;
 }

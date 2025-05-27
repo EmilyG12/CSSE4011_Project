@@ -259,7 +259,7 @@ int register_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID) {
 
     player->sequenceNumber = seq;
 
-    // TODO publish fight to web.
+
     return 1;
 }
 

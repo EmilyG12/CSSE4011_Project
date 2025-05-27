@@ -15,6 +15,11 @@ LOG_MODULE_DECLARE(app);
 
 GameController *game_controller = NULL;
 
+typedef struct {
+    uint8_t data[32];
+    FightAd ad;
+} FightAdMessage;
+
 int wait_cmd(const struct shell *shell, int argc, char **argv) {
     if (argc != 1) {
         shell_print(shell, "Usage: fight wait name");
@@ -154,7 +159,22 @@ int fight_ad_process(FightAd ad) {
     }
 }
 
+K_QUEUE_DEFINE(bt_queue);
+
+void process_queue(void) {
+    while (!k_queue_is_empty(&bt_queue)) {
+        FightAdMessage* ad = k_queue_get(&bt_queue, K_MSEC(33));
+        fight_ad_process(ad->ad);
+        free(ad);
+    }
+}
+
 bool arena_observer(const char *mac_addr, int rssi, int type, uint8_t data[], size_t len) {
+    if (!game_controller) {
+        LOG_ERR("Game has not been initialised");
+        return false;
+    }
+
     for (uint8_t i = 0; i < len; i++) {
         uint8_t adLen = data[i++];
         if (adLen == 0) {
@@ -168,7 +188,17 @@ bool arena_observer(const char *mac_addr, int rssi, int type, uint8_t data[], si
             if (!fight_ad.uuid) {
                 continue;
             }
-            return fight_ad_process(fight_ad);
+
+            Player* player = find_player(game_controller->arena->players, game_controller->arena->playerCount, *fight_ad.uuid);
+            if (player && player->sequenceNumber == *fight_ad.sequenceNumber) {
+                return true;
+            }
+
+            FightAdMessage* q = malloc(sizeof(FightAdMessage));
+            memcpy(q->data, data + i, adLen);
+            q->ad = parse_fight_ad(q->data, adLen);
+            k_queue_append(&bt_queue, q);
+            return true;
         }
     }
 
@@ -178,6 +208,7 @@ bool arena_observer(const char *mac_addr, int rssi, int type, uint8_t data[], si
 InputController init_input_controller(GameController *controller) {
     game_controller = controller;
 
+    k_queue_init(&bt_queue);
     return (InputController){
         .command = process_cmd,
         .buttonPressed = button_pressed,

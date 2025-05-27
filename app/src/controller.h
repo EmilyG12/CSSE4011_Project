@@ -17,4 +17,6 @@ typedef struct {
 
 InputController init_input_controller(GameController* controller);
 
+void process_queue(void);
+
 #endif //CONTROLLER_H
