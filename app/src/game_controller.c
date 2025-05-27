@@ -72,11 +72,13 @@ void init_waiting_screen(void) {
     update_waiting_screen();
 }
 
-void update_fight_screen(void) {
+void update_fight_screen(bool buttonsOn) {
     if (!battle_config.buttons) {
         return;
     }
-
+    for (int i = 1; i < battle_config.buttonCount; i++) {
+        battle_config.buttons[i].on = buttonsOn;
+    }
     update_battle_scene(&battle_config);
 }
 
@@ -93,7 +95,7 @@ PlayerDisplayConfig init_player_config(Player* player) {
     return config;
 }
 
-void init_fight_screen(void) {
+void init_fight_screen(bool buttonsOn) {
     LOG_INF("Changing to battle scene");
     if (!controller.me.player || !controller.opponent.player) {
         LOG_ERR("Failed to initialize battle scene");
@@ -110,7 +112,7 @@ void init_fight_screen(void) {
         moveButtons[battle_config.buttonCount++] = (ButtonConfig){
             // FIXME this is a hacky thing in the meantime
             .label = "abcde" + controller.me.player->moves[i],
-            i,true, do_nothing};
+            i, buttonsOn, do_nothing};
     }
 
     battle_config.me = init_player_config(controller.me.player);
@@ -157,7 +159,7 @@ int player_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t s
     }
 
     controller.opponent.player = find_player_by_uuid(controller.arena->players, controller.arena->playerCount, opponentUUID);
-    init_fight_screen();
+    init_fight_screen(false);
     return 0;
 }
 
@@ -180,7 +182,7 @@ int player_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i) {
         return err;
     }
 
-    // TODO blank battle_scene
+    update_fight_screen(false);
 
     return register_move(uuid, seq, sessionID, i);
 }
@@ -220,7 +222,7 @@ int opponent_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
         }
 
         controller.opponent.player = find_player_by_uuid(controller.arena->players, controller.arena->playerCount, uuid);
-        init_fight_screen();
+        init_fight_screen(true);
     }
 
     return updated;
@@ -237,7 +239,23 @@ int opponent_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID){
 int opponent_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i){
     int updated = register_fled(uuid, seq, sessionID);
     if (updated > 0) {
-        // TODO unblank battle_scene
+        Player* myOpponent = controller.opponent.player;
+        if (!myOpponent) {
+            LOG_DBG("I'm not fighting");
+            return 0;
+        }
+
+        if (myOpponent->uuid != uuid) {
+            LOG_DBG("This isn't your opponent");
+            return 0;
+        }
+
+        if (controller.me.player->sessionID != sessionID) {
+            LOG_DBG("This is your opponent but it's a different fight");
+            return 0;
+        }
+
+        update_fight_screen(true);
     }
     return updated;
 }

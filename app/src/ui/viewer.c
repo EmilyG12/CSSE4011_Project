@@ -246,7 +246,7 @@ void set_button_mode(Button *button, int mode) {
 }
 
 void change_player_action(const char *action, int index, Button *button) {
-   if (index < 4) {
+   if (index < 5) {
       change_button_label(button, action);
    } else {
       LOG_ERR("Index out of bounds");
@@ -383,9 +383,6 @@ BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
    return config;
 }
 
-/* button mask will set action 1 based on bit 0, 2 based on bit 1, so on and so forth
-   0 = greyed out, 1 = available
-*/
 void update_battle_scene(BattleSceneConfig* config) {
 #ifndef CONFIG_LVGL
    LOG_DBG("screen not available");
@@ -434,16 +431,6 @@ void update_connections_scene(ConnectionSceneConfig* config) {
    init_connections_scene(config);
 }
 
-//TODO: make a list of buttons for each action DONE
-//TODO: set a function which changes the scene NOT NEEDED
-//TODO: create a function which sets player health DONE
-//TODO: create a function which changes player name DONE
-//TODO: create a function which recursively makes buttons r/r + c/c KINDA IMPOSSIBLE
-//TODO: ensure that actions are blocked given player.turn is false DONE
-//TODO: create a function which loads an image into the scene DONE
-
-/* Adds the background image, icon image and coordinates.
-*/
 void init_screen(void) {
 #ifndef CONFIG_LVGL
    LOG_WRN("screen not available");
