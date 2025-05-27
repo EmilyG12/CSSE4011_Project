@@ -219,7 +219,7 @@ int opponent_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
             return -1;
         }
 
-        controller.opponent.player = find_player_by_uuid(controller.arena->players, controller.arena->playerCount, opponentUUID);
+        controller.opponent.player = find_player_by_uuid(controller.arena->players, controller.arena->playerCount, uuid);
         init_fight_screen();
     }
 

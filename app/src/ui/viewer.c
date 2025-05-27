@@ -2,7 +2,7 @@
 #include <fight.h>
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_DECLARE(app);
+LOG_MODULE_REGISTER(viewer, LOG_LEVEL_DBG);
 
 #ifdef CONFIG_LVGL
 #include <zephyr/kernel.h>
