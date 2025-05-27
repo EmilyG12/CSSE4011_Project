@@ -16,11 +16,6 @@ LOG_MODULE_DECLARE(app);
 
 GameController *game_controller = NULL;
 
-typedef struct {
-    uint8_t data[32];
-    FightAd ad;
-} FightAdMessage;
-
 int wait_cmd(const struct shell *shell, int argc, char **argv) {
     if (argc > 1) {
         shell_print(shell, "Usage: fight wait [name]");
@@ -154,6 +149,28 @@ int process_cmd(const struct shell *shell, int argc, char **argv) {
     return -1;
 }
 
+typedef struct {
+    const struct shell *shell;
+    int argc;
+    char** argv;
+} CLIMessage;
+
+K_QUEUE_DEFINE(cmd_queue);
+
+int command_observer(const struct shell *shell, int argc, char **argv) {
+    CLIMessage* msg = malloc(sizeof(CLIMessage));
+    msg->shell = shell;
+    msg->argc = argc;
+    msg->argv = malloc(sizeof(char*) * argc);
+    for (int i = 0; i < argc; i++) {
+        msg->argv[i] = malloc(sizeof(char) * strlen(argv[i]) + 1);
+        strcpy(msg->argv[i], argv[i]);
+    }
+
+    k_queue_append(&cmd_queue, msg);
+    return 0;
+}
+
 void button_pressed(int i) {
     if (!game_controller) {
         return;
@@ -203,13 +220,34 @@ int fight_ad_process(FightAd ad) {
     }
 }
 
+typedef struct {
+    uint8_t data[32];
+    FightAd ad;
+} FightAdMessage;
+
 K_QUEUE_DEFINE(bt_queue);
 
 void process_queue(void) {
     while (!k_queue_is_empty(&bt_queue)) {
-        FightAdMessage* ad = k_queue_get(&bt_queue, K_MSEC(33));
+        FightAdMessage* ad = k_queue_get(&bt_queue, K_MSEC(10));
+        if (!ad) {
+            return;
+        }
         fight_ad_process(ad->ad);
         free(ad);
+    }
+
+    while (!k_queue_is_empty(&cmd_queue)) {
+        CLIMessage* cmd = k_queue_get(&cmd_queue, K_MSEC(10));
+        if (!cmd) {
+            return;
+        }
+        process_cmd(cmd->shell, cmd->argc, cmd->argv);
+        for (int i = 0; i < cmd->argc; i++) {
+            free(cmd->argv[i]);
+        }
+        free(cmd->argv);
+        free(cmd);
     }
 }
 
@@ -253,8 +291,9 @@ InputController init_input_controller(GameController *controller) {
     game_controller = controller;
 
     k_queue_init(&bt_queue);
+    k_queue_init(&cmd_queue);
     return (InputController){
-        .command = process_cmd,
+        .command = command_observer,
         .buttonPressed = button_pressed,
         .observer = arena_observer
     };

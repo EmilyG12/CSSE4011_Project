@@ -62,10 +62,61 @@ void update_waiting_screen(void) {
 
 void init_waiting_screen(void) {
     LOG_INF("Changing to connection scene");
+    battle_config.buttons = NULL;
+    battle_config.buttonCount = 0;
+
     waitingButtons[0] = (ButtonConfig){.label = "back", 0, true, do_nothing};
     conn_config.buttons = waitingButtons;
     conn_config.buttonCount = 1;
+
     update_waiting_screen();
+}
+
+void update_fight_screen(void) {
+    if (!battle_config.buttons) {
+        return;
+    }
+
+    update_battle_scene(&battle_config);
+}
+
+PlayerDisplayConfig init_player_config(Player* player) {
+    PlayerDisplayConfig config = {
+        .health = player->fighter,
+        .healthMax = player->fighter,
+        .name = player->name,
+        .spriteName = "bulbasaur",
+        .turn = !!player->challengee,
+        .playerNum = controller.me.player->uuid == player->uuid ? 1 : 2
+    };
+
+    return config;
+}
+
+void init_fight_screen(void) {
+    LOG_INF("Changing to battle scene");
+    if (!controller.me.player || !controller.opponent.player) {
+        LOG_ERR("Failed to initialize battle scene");
+        return;
+    }
+
+    conn_config.buttons = NULL;
+    conn_config.buttonCount = 0;
+
+    moveButtons[0] = (ButtonConfig){.label = "flee", 2, true, do_nothing};
+    battle_config.buttons = moveButtons;
+    battle_config.buttonCount = 1;
+    for (int i = 0; i < 4; i++) {
+        moveButtons[battle_config.buttonCount] = (ButtonConfig){
+            // FIXME this is a hacky thing in the meantime
+            .label = "abcde" + controller.me.player->moves[i],
+            i,true, do_nothing};
+    }
+
+    battle_config.me = init_player_config(controller.me.player);
+    battle_config.opponent = init_player_config(controller.opponent.player);
+
+    init_battle_scene(&battle_config);
 }
 
 int player_waiting(uint32_t uuid, uint16_t seq, const char* name) {
@@ -93,15 +144,21 @@ int player_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
 }
 
 int player_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]) {
+    int updated = register_accept(uuid, seq, opponentUUID, sessionID, fighter, moves);
+    if (updated < 0){
+        LOG_ERR("register accept failed");
+        return updated;
+    }
+
     int err = fight_ad_accept(opponentUUID, sessionID, fighter, moves);
     if (err){
         LOG_ERR("ad failed :\'(");
         return err;
     }
 
-    // TODO init_battle_scene
-
-    return register_accept(uuid, seq, opponentUUID, sessionID, fighter, moves);
+    controller.opponent.player = find_player_by_uuid(controller.arena->players, controller.arena->playerCount, opponentUUID);
+    init_fight_screen();
+    return 0;
 }
 
 int player_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID) {
@@ -147,8 +204,25 @@ int opponent_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32
 int opponent_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]) {
     int updated = register_accept(uuid, seq, opponentUUID, sessionID, fighter, moves);
     if (updated > 0) {
-        // TODO update battle_screen
+        if (!controller.me.player) {
+            LOG_INF("I'm not waiting");
+            return 0;
+        }
+
+        if (opponentUUID != controller.me.player->uuid) {
+            LOG_INF("that challenge isn't for me");
+            return 0;
+        }
+
+        if (uuid != controller.me.player->challengee) {
+            LOG_INF("That isn't who I challenged");
+            return -1;
+        }
+
+        controller.opponent.player = find_player_by_uuid(controller.arena->players, controller.arena->playerCount, opponentUUID);
+        init_fight_screen();
     }
+
     return updated;
 }
 
@@ -180,9 +254,9 @@ GameController *init_game(void) {
         .opponent ={
             .waiting = opponent_waiting,
             .initiate = opponent_initiate,
-            .accept = register_accept,
-            .fled = register_fled,
-            .move = register_move,
+            .accept = opponent_accept,
+            .fled = opponent_fled,
+            .move = opponent_move,
         },
         .arena = get_arena(),
     };

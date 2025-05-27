@@ -81,8 +81,10 @@ int fight_ad_initiate(uint32_t opponentUUID, uint32_t sessionID, uint16_t fighte
     memcpy(fightAd.args + offset, &fighter, sizeof(fighter));
     offset += sizeof(fighter);
 
-    memcpy(fightAd.args + offset, moves, sizeof(moves[0]) * 4);
-    // offset += sizeof(moves[0]) * 4;
+    for (int i = 0; i < 4; i++) {
+        memcpy(fightAd.args + offset, moves + i, sizeof(moves[0]));
+        offset += sizeof(moves[0]);
+    }
 
     return !update_advertisements();
 }
@@ -99,8 +101,10 @@ int fight_ad_accept(uint32_t opponentUUID, uint32_t sessionID, uint16_t fighter,
     memcpy(fightAd.args + offset, &fighter, sizeof(fighter));
     offset += sizeof(fighter);
 
-    memcpy(fightAd.args + offset, moves, sizeof(moves[0]) * 4);
-    // offset += sizeof(moves[0]) * 4;
+    for (int i = 0; i < 4; i++) {
+        memcpy(fightAd.args + offset, moves + i, sizeof(moves[0]));
+        offset += sizeof(moves[0]);
+    }
 
     return !update_advertisements();
 }

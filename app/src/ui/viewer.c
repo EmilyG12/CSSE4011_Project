@@ -329,8 +329,15 @@ void update_player(DisPlayer* player, PlayerDisplayConfig config) {
 
 BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
 #ifndef CONFIG_LVGL
-   LOG_ERR("screen not available");
+   LOG_DBG("screen not available");
 #else
+   LOG_DBG("initialising battle scene");
+   LOG_INF("[%s] %s vs %s [%s]",
+      config->me.name,
+      config->me.spriteName,
+      config->opponent.spriteName,
+      config->opponent.name);
+
    initialise_player(&user, &config->me);
    initialise_player(&opponent, &config->opponent);
 
@@ -366,9 +373,6 @@ BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
    lv_obj_center(img);
    lv_obj_move_background(img);
 
-   /* setting initial sprites */
-   set_user_sprite(&user, user.sprite_img);
-   set_user_sprite(&opponent, opponent.sprite_img);
    scene = 1;
 #endif
    return config;
@@ -379,7 +383,7 @@ BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
 */
 void update_battle_scene(BattleSceneConfig* config) {
 #ifndef CONFIG_LVGL
-   LOG_ERR("screen not available");
+   LOG_DBG("screen not available");
 #else
    if (scene != 1) {
       init_battle_scene(config);
@@ -398,7 +402,7 @@ void update_battle_scene(BattleSceneConfig* config) {
 
 ConnectionSceneConfig* init_connections_scene(ConnectionSceneConfig* config) {
 #ifndef CONFIG_LVGL
-   LOG_ERR("screen not available");
+   LOG_DBG("screen not available");
 #else
    lv_obj_clean(display.scr);
 
@@ -437,7 +441,7 @@ void update_connections_scene(ConnectionSceneConfig* config) {
 */
 void init_screen(void) {
 #ifndef CONFIG_LVGL
-   LOG_ERR("screen not available");
+   LOG_WRN("screen not available");
 #else
    const struct device *display_dev = DEVICE_DT_GET(DT_CHOSEN(zephyr_display));
    if (!device_is_ready(display_dev)) {

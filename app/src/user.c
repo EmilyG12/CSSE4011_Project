@@ -6,7 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-User user_data = {};
+User user_data = {
+    .fighter = {.id = 120, .moves = {1, 2, 3, 4}}
+};
 
 User* get_user(void){
     return &user_data;

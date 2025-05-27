@@ -199,7 +199,7 @@ int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
         if (!challenger || (challenger->challengee != uuid)) {
             LOG_ERR("[%s: 0x%x] accepted invalid challenge", player->name, player->uuid);
             player->sequenceNumber = seq;
-            return 0;
+            return -1;
         }
 
         remove_player(arena.pendingPlayers, &arena.pendingCount, challenger);
@@ -307,7 +307,7 @@ void print_challenges(const struct shell* shell) {
         Player* challenger = arena.pendingPlayers[i];
         Player* challengee = find_player_by_uuid(arena.waitingPlayers, arena.waitingCount, challenger->challengee);
 
-        shell_print(shell, "[%s: 0x%x] challenges [%s: 0x%x] with the fighter (%d){%d, %d, %d, %d}",
+        shell_print(shell, "[%s: 0x%x] challenges [%s: 0x%x]\nwith the fighter (%d){%d, %d, %d, %d}",
             challenger->name,
             challenger->uuid,
             challengee ? challengee->name : "<unknown>",
@@ -320,7 +320,7 @@ void print_challenges(const struct shell* shell) {
 }
 
 void print_fighter(const struct shell* shell, Player* player) {
-    shell_print(shell, "[%s: 0x%x] with fighter (%d){%d, %d, %d, %d}",
+    shell_print(shell, "[%s: 0x%x]\nwith fighter (%d){%d, %d, %d, %d}",
             player->name, player->uuid,
             player->fighter, player->moves[0], player->moves[1], player->moves[2], player->moves[3]
             );
