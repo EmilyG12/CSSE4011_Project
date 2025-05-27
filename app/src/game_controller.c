@@ -107,7 +107,7 @@ void init_fight_screen(void) {
     battle_config.buttons = moveButtons;
     battle_config.buttonCount = 1;
     for (int i = 0; i < 4; i++) {
-        moveButtons[battle_config.buttonCount] = (ButtonConfig){
+        moveButtons[battle_config.buttonCount++] = (ButtonConfig){
             // FIXME this is a hacky thing in the meantime
             .label = "abcde" + controller.me.player->moves[i],
             i,true, do_nothing};

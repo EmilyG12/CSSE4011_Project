@@ -331,7 +331,6 @@ BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
 #ifndef CONFIG_LVGL
    LOG_DBG("screen not available");
 #else
-   LOG_DBG("initialising battle scene");
    LOG_INF("[%s] %s vs %s [%s]",
       config->me.name,
       config->me.spriteName,
@@ -344,8 +343,15 @@ BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
    lv_obj_clean(display.scr);
 
    for (int i = 0; i < config->buttonCount; i++) {
+      int x = 0;
+      int y = BUTTON_POS_1Y + (BUTTON_HEIGHT * (i - 1));
+      if (i == 0) {
+         x = 85;
+         y = BUTTON_POS_1Y;
+      }
+
       buttons[i] = create_button(config->buttons[i].callback, display.scr,
-         0, BUTTON_POS_1Y + (BUTTON_HEIGHT * i),
+         x, y,
             config->buttons[i].label,
             80, 45, config->buttons[i].id, buttons + i
          );

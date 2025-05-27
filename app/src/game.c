@@ -320,7 +320,7 @@ void print_challenges(const struct shell* shell) {
 }
 
 void print_fighter(const struct shell* shell, Player* player) {
-    shell_print(shell, "[%s: 0x%x]\nwith fighter (%d){%d, %d, %d, %d}",
+    shell_print(shell, "[%s: 0x%x] with fighter (%d){%d, %d, %d, %d}",
             player->name, player->uuid,
             player->fighter, player->moves[0], player->moves[1], player->moves[2], player->moves[3]
             );
