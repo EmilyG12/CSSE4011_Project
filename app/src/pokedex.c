@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <zephyr/kernel.h>
 
+#include <zephyr/shell/shell.h>
+
 Pokemon all_pokemon[] = {
 //  { No,   "name",         HP, ATK,    DEF, Sp.ATK, Sp.DEF,    Moves Allowed},
     {  0,	"unknown",       0,	  0,	  0,	  0,	  0,	{}},
@@ -57,6 +59,21 @@ Pokemon* get_pokemon(int id){
     return get_pokemon(0);
 }
 
+Pokemon* get_pokemon_by_name(const char* name){
+    int n = atoi(name);
+    if (n) {
+        return get_pokemon(n);
+    }
+
+    for (int i = 0; i < ARRAY_SIZE(all_pokemon); i++){
+        if (!strcmp(all_pokemon[i].name, name)){
+            return &all_pokemon[i];
+        }
+    }
+
+    return get_pokemon(0);
+}
+
 Move* get_move(char id){
     for (int i = 0; i < ARRAY_SIZE(all_moves); i++){
         if (all_moves[i].id == id){
@@ -66,3 +83,39 @@ Move* get_move(char id){
 
     return get_move(0);
 }
+
+void pokemon_summary(const struct shell* shell, Pokemon* pokemon) {
+    shell_print(shell, "%-15s\tATK: %3d\tDEF: %3d\tSp. ATK: %3d\tSp. DEF: %3d", pokemon->name,
+                pokemon->power, pokemon->defense, pokemon->specialPower, pokemon->specialDefense);
+}
+
+void pokemon_details(const struct shell* shell, Pokemon* pokemon) {
+    shell_print(shell, "%s", pokemon->name);
+    shell_print(shell, "ATK: %d\tDEF: %d\tSp. ATK: %d\tSp. DEF: %d",
+                pokemon->power, pokemon->defense, pokemon->specialPower, pokemon->specialDefense);
+    for (int i = 0; i < 10; i++){
+        if (pokemon->legalMoves[i]){
+            Move* move = get_move(pokemon->legalMoves[i]);
+            shell_print(shell, "%13s: ATK=%3d\tSp.ATK=%3d", move->name, move->power, move->specialPower);
+        }
+    }
+}
+
+int list_pokemon(const struct shell* shell){
+    for (int i = 0; i < ARRAY_SIZE(all_pokemon); i++){
+        pokemon_summary(shell, &all_pokemon[i]);
+    }
+    return 0;
+}
+
+int cmd_pokedex(const struct shell* shell, size_t argc, char** argv){
+    if (argc == 1){
+        return list_pokemon(shell);
+    }
+
+    Pokemon* pokemon = get_pokemon_by_name(argv[1]);
+    pokemon_details(shell, pokemon);
+    return 0;
+}
+
+SHELL_CMD_REGISTER(pokedex, NULL, "Read data in the pokedex", cmd_pokedex);

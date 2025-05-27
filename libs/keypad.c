@@ -1,4 +1,7 @@
-#ifdef CONFIG_INPUT_KBD_MATRIX 
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(keypad);
+
+#ifdef CONFIG_INPUT_KBD_MATRIX
 #include <zephyr/kernel.h>
 #include <zephyr/device.h>
 #include <zephyr/input/input.h>
@@ -21,9 +24,6 @@ typedef struct {
 } KeypadEvent;
 
 KeypadEvent keypad;
-
-#include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(keypad);
 
 static const struct device *const kp_dev = DEVICE_DT_GET(DT_NODELABEL(kbdmatrix));
 
