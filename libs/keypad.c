@@ -77,30 +77,6 @@ static void kp_callback(struct input_event *evt, void *user_data)
 
 }
 
-// void kp_thread(void) {
-//     while(true) {
-//         // char *mempad = k_queue_get(&kp_queue, K_FOREVER);
-//         if (user_kp_callback) {
-//             user_kp_callback(*mempad);
-//         }
-//         free(mempad);
-//     }
-// }
-
-// K_THREAD_DEFINE(kp_thread, STACK_SIZE, kp_callback, NULL, NULL, NULL,
-            //   THREAD_PRIORITY, 0, K_NO_WAIT);
-
-        // for (int i = 0; i < 4; i++) {
-        //     for (int j = 0; j < 4; j++) {
-        //         if (keypad.x == i && keypad.y == j) {
-        //             letter = keys[j][i];
-        //             LOG_INF("Key pressed: %c", letter);
-        //             break;
-        //         }
-        //     }
-        // }
-        // keypad.x = 50;
-        // keypad.y = 50;
 // This macro registers the callback automatically.
 INPUT_CALLBACK_DEFINE(kp_dev, kp_callback, NULL);
 

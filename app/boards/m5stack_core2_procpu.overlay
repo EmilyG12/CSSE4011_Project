@@ -9,15 +9,12 @@
                     <&gpio0 14 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>,
                     <&gpio0 26 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>, 
                     <&gpio0 25 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-        col-gpios = <&gpio0 27 GPIO_ACTIVE_LOW>,
-                    <&gpio0 13 GPIO_ACTIVE_LOW>,
+        col-gpios = <&gpio0 33 GPIO_ACTIVE_LOW>,
+                    <&gpio0 27 GPIO_ACTIVE_LOW>,
                     <&gpio0 32 GPIO_ACTIVE_LOW>,
-                    <&gpio0 2  GPIO_ACTIVE_LOW>;
-        col-drive-inactive;
+                    <&gpio0 13 GPIO_ACTIVE_LOW>; 
         settle-time-us = <0>;
         no-ghostkey-check;
-        poll-timeout-ms = <0>;
-        idle-mode = "scan";
     
         keymap {
             compatible = "input-keymap";

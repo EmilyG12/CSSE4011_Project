@@ -34,7 +34,7 @@ int main(void) {
     }
 
     game = init_game();
-    input_controller = init_input_controller(game);
+    // input_controller = init_input_controller(game);
 
     if (!register_observer((Observer) {.filter = NULL, .callback = input_controller.observer})) {
         LOG_ERR("Failed to initialise bt input");
