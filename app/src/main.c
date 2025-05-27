@@ -8,6 +8,7 @@
 #include "game_controller.h"
 #include "../../libs/bt/bluetooth.h"
 #include "ui/viewer.h"
+#include "../../libs/keypad.h"
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_REGISTER(app, LOG_LEVEL_DBG);
@@ -42,6 +43,7 @@ int main(void) {
 
     // TODO init the push buttons to call ic.buttonPressed
 
+    set_user_kp_callback(input_controller.buttonPressed);
     init_screen();
 
     // FIXME make this a real splash screen

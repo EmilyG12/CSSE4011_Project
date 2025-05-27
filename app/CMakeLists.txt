@@ -10,6 +10,7 @@ target_sources(app PRIVATE
         ../libs/bt/bt_scanner.c
         ../libs/bt/bt_advertiser.c
         #        ../../libs/bt/cli_observer.c
+        ../libs/keypad.c
 )
 
 file(GLOB IMG_FILES ${PROJECT_SOURCE_DIR}/src/ui/images/*.c)

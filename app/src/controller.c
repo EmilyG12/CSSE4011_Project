@@ -172,11 +172,11 @@ int command_observer(const struct shell *shell, int argc, char **argv) {
     return 0;
 }
 
-void button_pressed(int i) {
+void button_pressed(char letter) {
     if (!game_controller) {
         return;
     }
-
+    
     // TODO
 }
 

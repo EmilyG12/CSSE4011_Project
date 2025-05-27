@@ -11,7 +11,7 @@
 
 typedef struct {
     int (*command)(const struct shell* shell, int argc, char** argv);
-    void (*buttonPressed)(int id);
+    void (*buttonPressed)(char letter);
     ObserverCallback observer;
 } InputController;
 
