@@ -45,7 +45,7 @@ int main(void) {
     init_screen();
     ButtonConfig buttons[] = {
         {.label = "button 1", .id = 1, .on = true, .callback = pingu},
-        {.label = "button 2", .id = 2, .on = true, .callback = pingu},
+        {.label = "button 2", .id = 2, .on = 2, .callback = pingu},
     };
     ConnectionSceneConfig config = {
         .buttons = buttons, .buttonCount = ARRAY_SIZE(buttons)

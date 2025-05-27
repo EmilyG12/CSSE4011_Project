@@ -237,8 +237,10 @@ void set_button_mode(Button *button, int mode) {
    button->set = mode;
    if (!mode) {
       lv_obj_set_style_bg_color(button->button, lv_palette_main(LV_PALETTE_GREY), 0);
-   } else {
+   } else if (mode == 1){
       lv_obj_set_style_bg_color(button->button, lv_palette_main(LV_PALETTE_BLUE), 0); 
+   } else if (mode == 2) {
+      lv_obj_set_style_bg_color(button->button, lv_palette_main(LV_PALETTE_PINK), 0); 
    }
 #endif
 }
