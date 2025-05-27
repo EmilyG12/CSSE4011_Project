@@ -36,7 +36,7 @@ int wait_cmd(const struct shell *shell, int argc, char **argv) {
 
 int initiate_cmd(const struct shell *shell, int argc, char **argv) {
     if (!(argc == 1 || argc == 2 || argc == 6)) {
-        shell_print(shell, "Usage: fight initiate opponent_uuid fighter_id move_id_1 move_id_2 move_id_3 move_id_4");
+        shell_print(shell, "Usage: fight initiate opponent [fighter_id [move_id_1 move_id_2 move_id_3 move_id_4]]");
         return 1;
     }
 
@@ -66,7 +66,7 @@ int initiate_cmd(const struct shell *shell, int argc, char **argv) {
 
 int accept_cmd(const struct shell *shell, int argc, char **argv) {
     if (!(argc == 1 || argc == 2 || argc == 6)) {
-        shell_print(shell, "Usage: fight accept opponent_uuid [fighter_id [move_id_1 move_id_2 move_id_3 move_id_4]]");
+        shell_print(shell, "Usage: fight accept opponent [fighter_id [move_id_1 move_id_2 move_id_3 move_id_4]]");
         return 1;
     }
 
@@ -82,6 +82,7 @@ int accept_cmd(const struct shell *shell, int argc, char **argv) {
     }
 
     uint32_t sessionID = challenger->sessionID;
+
     int fighter = (argc > 1) ? atoi(argv[1]) : get_user()->fighter.id;
     get_user()->fighter.id = fighter;
 

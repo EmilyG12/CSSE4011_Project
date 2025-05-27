@@ -3,6 +3,9 @@
 //
 
 #include "game.h"
+
+#include <pokedex.h>
+
 #include "fight.h"
 
 #include <zephyr/bluetooth/gap.h>
@@ -307,23 +310,29 @@ void print_challenges(const struct shell* shell) {
         Player* challenger = arena.pendingPlayers[i];
         Player* challengee = find_player_by_uuid(arena.waitingPlayers, arena.waitingCount, challenger->challengee);
 
-        shell_print(shell, "[%s: 0x%x] challenges [%s: 0x%x]\nwith the fighter (%d){%d, %d, %d, %d}",
+        shell_print(shell, "[%s: 0x%x] challenges [%s: 0x%x]\nwith the fighter (%s){%s, %s, %s, %s}",
             challenger->name,
             challenger->uuid,
             challengee ? challengee->name : "<unknown>",
             challenger->challengee,
-            challenger->fighter,
-            challenger->moves[0], challenger->moves[1], challenger->moves[2], challenger->moves[3]
+            get_pokemon(challenger->fighter)->name,
+            get_move(challenger->moves[0])->name,
+            get_move(challenger->moves[1])->name,
+            get_move(challenger->moves[2])->name,
+            get_move(challenger->moves[3])->name
             );
     }
     shell_print(shell, "");
 }
 
 void print_fighter(const struct shell* shell, Player* player) {
-    shell_print(shell, "[%s: 0x%x] with fighter (%d){%d, %d, %d, %d}",
+    shell_print(shell, "[%s: 0x%x] with fighter (%s){%s, %s, %s, %s}",
             player->name, player->uuid,
-            player->fighter, player->moves[0], player->moves[1], player->moves[2], player->moves[3]
-            );
+            get_pokemon(player->fighter)->name,
+            get_move(player->moves[0])->name,
+            get_move(player->moves[1])->name,
+            get_move(player->moves[2])->name,
+            get_move(player->moves[3])->name);
 }
 
 void print_fights(const struct shell* shell) {
@@ -341,7 +350,11 @@ void print_fights(const struct shell* shell) {
         shell_print(shell, "VS");
         print_fighter(shell, challengee);
         for (int m = 0; m < arena.fights[i].moveCount; m++) {
-            shell_fprintf_normal(shell, "%d-", arena.fights[i].moves[m]);
+            int fighter_move_number = arena.fights[i].moves[m];
+            char global_move_number = arena.fights[i].players[m % 2]->moves[fighter_move_number];
+            Move* move = get_move(global_move_number);
+
+            shell_fprintf_normal(shell, "%s%s", move->name, m % 2 ? " - " : "|");
         }
         shell_print(shell, "");
     }

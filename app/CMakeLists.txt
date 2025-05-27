@@ -25,6 +25,7 @@ target_sources(app PRIVATE
         src/game.c
         src/fight.c
         src/user.c
+        src/pokedex.c
         src/main.c
 
         src/ui/viewer.c

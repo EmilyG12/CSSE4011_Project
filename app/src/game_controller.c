@@ -6,6 +6,7 @@
 
 #include <fight_ad.h>
 #include "game.h"
+#include "pokedex.h"
 #include "bt/bluetooth.h"
 #include "ui/viewer.h"
 
@@ -84,10 +85,10 @@ void update_fight_screen(bool buttonsOn) {
 
 PlayerDisplayConfig init_player_config(Player* player) {
     PlayerDisplayConfig config = {
-        .health = player->fighter,
-        .healthMax = player->fighter,
+        .health = get_pokemon(player->fighter)->maxHP,
+        .healthMax = get_pokemon(player->fighter)->maxHP,
         .name = player->name,
-        .spriteName = "bulbasaur",
+        .spriteName = get_pokemon(player->fighter)->name,
         .turn = !!player->challengee,
         .playerNum = controller.me.player->uuid == player->uuid ? 1 : 2
     };
@@ -110,8 +111,7 @@ void init_fight_screen(bool buttonsOn) {
     battle_config.buttonCount = 1;
     for (int i = 0; i < 4; i++) {
         moveButtons[battle_config.buttonCount++] = (ButtonConfig){
-            // FIXME this is a hacky thing in the meantime
-            .label = "abcde" + controller.me.player->moves[i],
+            .label = get_move(controller.me.player->moves[i])->name,
             i, buttonsOn, do_nothing};
     }
 
