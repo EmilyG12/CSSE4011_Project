@@ -2,7 +2,7 @@
 #include <fight.h>
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(viewer, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(viewer);
 
 #ifdef CONFIG_LVGL
 #include <zephyr/kernel.h>
@@ -336,11 +336,10 @@ BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
       config->me.spriteName,
       config->opponent.spriteName,
       config->opponent.name);
+   lv_obj_clean(display.scr);
 
    initialise_player(&user, &config->me);
    initialise_player(&opponent, &config->opponent);
-
-   lv_obj_clean(display.scr);
 
    for (int i = 0; i < config->buttonCount; i++) {
       int x = 0;

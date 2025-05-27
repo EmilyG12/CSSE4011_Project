@@ -132,19 +132,29 @@ int fight_ad_flee(void){
 }
 
 FightAd parse_fight_ad(uint8_t data[], size_t len) {
-    for (int i = 0; i < 4; i++) {
+#define FIGHT_AD_HEADER_LEN 4
+    for (int i = 0; i < FIGHT_AD_HEADER_LEN; i++) {
         if (data[i] != fightAdData[i]) {
             return (FightAd){NULL};
         }
     }
+    FightAd fightAd;
+    int offset = FIGHT_AD_HEADER_LEN;
+    fightAd.uuid = (void*) (data + offset);
+    offset += sizeof(*fightAd.uuid);
 
-    return (FightAd){
-        (void*) (data + 4),
-        (void*) (data + 8),
-        (void*) (data + 16),
-        (void*) (data + 18),
-        (data + 20)
-    };
+    fightAd.sessionID = (void*) (data + offset);
+    offset += sizeof(*fightAd.sessionID);
+
+    fightAd.sequenceNumber = (void*) (data + offset);
+    offset += sizeof(*fightAd.sequenceNumber);
+
+    fightAd.command = (void*) (data + offset);
+    offset += sizeof(*fightAd.command);
+
+    fightAd.args = (void*) (data + offset);
+
+    return fightAd;
 }
 
 FightAd get_fight_ad(void) {
