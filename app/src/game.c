@@ -15,7 +15,7 @@
 #include "fight_ad.h"
 
 #include <zephyr/logging/log.h>
-LOG_MODULE_DECLARE(app);
+LOG_MODULE_DECLARE(fight);
 
 static Arena arena = {};
 
@@ -157,7 +157,7 @@ int register_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32
 }
 
 int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]) {
-    LOG_INF("register_accept(uuid=0x%x, seq=%d, opponentUUID=0x%x, sessionID=0x%x, fighter=%d, moves=[%d, %d, %d, %d])",
+    LOG_DBG("register_accept(uuid=0x%x, seq=%d, opponentUUID=0x%x, sessionID=0x%x, fighter=%d, moves=[%d, %d, %d, %d])",
             uuid, seq, opponentUUID, sessionID, fighter, moves[0], moves[1], moves[2], moves[3]);
 
     Player* player = find_or_create(uuid, seq, NULL);

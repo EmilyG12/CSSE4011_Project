@@ -43,6 +43,8 @@ int main(void) {
     // TODO init the push buttons to call ic.buttonPressed
 
     init_screen();
+
+    // FIXME make this a real splash screen
     ButtonConfig buttons[] = {
         {.label = "button 1", .id = 1, .on = true, .callback = pingu},
         {.label = "button 2", .id = 2, .on = 2, .callback = pingu},
