@@ -37,7 +37,7 @@ void update_waiting_screen(void) {
     for (int i = 0; i < controller.arena->pendingCount; i++) {
         if (controller.arena->pendingPlayers[i]->challengee == controller.me.player->uuid) {
             waitingButtons[conn_config.buttonCount++] = (ButtonConfig){
-                .label = controller.arena->waitingPlayers[i]->name,
+                .label = controller.arena->pendingPlayers[i]->name,
                 .id = conn_config.buttonCount - 1,
                 .callback = do_nothing,
                 .on = 2
@@ -77,7 +77,7 @@ int player_waiting(uint32_t uuid, uint16_t seq, const char* name) {
 
     int updated = register_waiting(uuid, seq, name);
     if (updated > 0) {
-        controller.me.player = find_player(controller.arena->players, controller.arena->playerCount, uuid);
+        controller.me.player = find_player_by_uuid(controller.arena->players, controller.arena->playerCount, uuid);
         init_waiting_screen();
     }
     return err;

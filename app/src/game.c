@@ -19,7 +19,22 @@ LOG_MODULE_DECLARE(fight);
 
 static Arena arena = {};
 
-Player* find_player(Player** players, int playerCount, uint32_t uuid) {
+Player* find_player_by_name(Player** players, int playerCount, const char* name) {
+    long uuid = strtol(name, NULL, 0);
+    if (uuid) {
+        return find_player_by_uuid(players, playerCount, uuid);
+    }
+
+    for (int i = 0; i < playerCount; i++) {
+        if (!strcmp(players[i]->name, name)) {
+            return players[i];
+        }
+    }
+
+    return NULL;
+}
+
+Player* find_player_by_uuid(Player** players, int playerCount, uint32_t uuid) {
     for (int i = 0; i < playerCount; i++) {
         if (players[i]->uuid == uuid) {
             return players[i];
@@ -103,10 +118,10 @@ int register_waiting(uint32_t uuid, uint16_t seq, const char* name) {
     uint16_t lastSeq = player->sequenceNumber;
     player->sequenceNumber = seq;
 
-    Player* known = find_player(arena.waitingPlayers, arena.waitingCount, uuid);
+    Player* known = find_player_by_uuid(arena.waitingPlayers, arena.waitingCount, uuid);
     if (!known) {
         add_player(arena.waitingPlayers, &arena.waitingCount, player);
-        known = find_player(arena.waitingPlayers, arena.waitingCount, uuid);
+        known = find_player_by_uuid(arena.waitingPlayers, arena.waitingCount, uuid);
     }
 
     if (!known) {
@@ -135,11 +150,11 @@ int register_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32
     uint16_t lastSeq = player->sequenceNumber;
     player->sequenceNumber = seq;
 
-    Player* known = find_player(arena.pendingPlayers, arena.pendingCount, uuid);
+    Player* known = find_player_by_uuid(arena.pendingPlayers, arena.pendingCount, uuid);
     if (!known) {
         remove_player(arena.waitingPlayers, &arena.waitingCount, player);
         add_player(arena.pendingPlayers, &arena.pendingCount, player);
-        known = find_player(arena.pendingPlayers, arena.pendingCount, uuid);
+        known = find_player_by_uuid(arena.pendingPlayers, arena.pendingCount, uuid);
     }
 
     if (!known) {
@@ -148,11 +163,15 @@ int register_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32
     }
 
     known->challengee = opponentUUID;
+    known->sessionID = sessionID;
     known->fighter = fighter;
     memcpy(known->moves, moves, 4);
 
-    LOG_INF("[%s (%d->%d)]: Initiated a duel (uuid: 0x%x)(session: 0x%x)",
-        known->name, lastSeq, known->sequenceNumber, known->uuid, sessionID);
+    Player* challengee = find_player_by_uuid(arena.waitingPlayers, arena.waitingCount, opponentUUID);
+    char* name = challengee ? challengee->name : "<unknown>";
+
+    LOG_INF("[%s (%d->%d)]: Initiated a duel against [%s]",
+        known->name, lastSeq, known->sequenceNumber, name);
     return 1;
 }
 
@@ -176,7 +195,7 @@ int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
     if (!fight) {
         remove_player(arena.waitingPlayers, &arena.waitingCount, player);
 
-        Player* challenger = find_player(arena.pendingPlayers, arena.pendingCount, opponentUUID);
+        Player* challenger = find_player_by_uuid(arena.pendingPlayers, arena.pendingCount, opponentUUID);
         if (!challenger || (challenger->challengee != uuid)) {
             LOG_ERR("[%s: 0x%x] accepted invalid challenge", player->name, player->uuid);
             player->sequenceNumber = seq;
@@ -188,6 +207,7 @@ int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
 
         player->fighter = fighter;
         memcpy(player->moves, moves, 4);
+        player->sessionID = sessionID;
 
         Fight newFight = {
             .players[0] = challenger,
@@ -225,7 +245,7 @@ int register_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int move) {
         return -2;
     }
 
-    Player* known = find_player(fight->players, 2, uuid);
+    Player* known = find_player_by_uuid(fight->players, 2, uuid);
     if (!known) {
         LOG_ERR("[%s: 0x%x] fought in a fight they weren't in", player->name, player->uuid);
         player->sequenceNumber = seq;
@@ -248,7 +268,7 @@ int register_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID) {
         return -1;
     }
 
-    Player* player = find_player(fight->players, 2, uuid);
+    Player* player = find_player_by_uuid(fight->players, 2, uuid);
     if (!player) {
         return -2;
     }
@@ -285,7 +305,7 @@ void print_challenges(const struct shell* shell) {
     shell_print(shell, "Challenges issued:");
     for (int i = 0; i < arena.pendingCount; i++) {
         Player* challenger = arena.pendingPlayers[i];
-        Player* challengee = find_player(arena.waitingPlayers, arena.waitingCount, challenger->challengee);
+        Player* challengee = find_player_by_uuid(arena.waitingPlayers, arena.waitingCount, challenger->challengee);
 
         shell_print(shell, "[%s: 0x%x] challenges [%s: 0x%x] with the fighter (%d){%d, %d, %d, %d}",
             challenger->name,

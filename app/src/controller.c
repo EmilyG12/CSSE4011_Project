@@ -9,6 +9,7 @@
 
 #include "fight_ad.h"
 #include "game.h"
+#include "user.h"
 
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(app);
@@ -21,45 +22,88 @@ typedef struct {
 } FightAdMessage;
 
 int wait_cmd(const struct shell *shell, int argc, char **argv) {
-    if (argc != 1) {
-        shell_print(shell, "Usage: fight wait name");
+    if (argc > 1) {
+        shell_print(shell, "Usage: fight wait [name]");
         return 1;
     }
 
+    const char* username = argc == 1 ? argv[0] : get_user()->name;
+    if (!username) {
+        shell_print(shell, "Usage: fight wait name");
+        return 2;
+    }
+
+    set_user_name(username);
     FightAd my_ad = get_fight_ad();
-    return game_controller->me.waiting(*my_ad.uuid, *my_ad.sequenceNumber + 1, argv[0]);
+
+    return game_controller->me.waiting(*my_ad.uuid, *my_ad.sequenceNumber + 1, username);
 }
 
 int initiate_cmd(const struct shell *shell, int argc, char **argv) {
-    if (argc != 6) {
+    if (!(argc == 1 || argc == 2 || argc == 6)) {
         shell_print(shell, "Usage: fight initiate opponent_uuid fighter_id move_id_1 move_id_2 move_id_3 move_id_4");
         return 1;
     }
 
-    FightAd my_ad = get_fight_ad();
-    char moves[] = {atoi(argv[2]), atoi(argv[3]), atoi(argv[4]), atoi(argv[5])};
-    return game_controller->me.initiate(*my_ad.uuid,
-                                        *my_ad.sequenceNumber + 1,
-                                        strtol(argv[0], NULL, 0),
-                                        sys_rand32_get(),
-                                        atoi(argv[1]),
-                                        moves);
-}
+    Player* opponent = find_player_by_name(get_arena()->players, get_arena()->playerCount, argv[0]);
+    if (!opponent) {
+        shell_print(shell, "Player \"%s\" not found", argv[0]);
+        return 2;
+    }
 
-int accept_cmd(const struct shell *shell, int argc, char **argv) {
-    if (argc != 7) {
-        shell_print(shell, "Usage: fight accept opponent_uuid session_id fighter_id move_id_1 move_id_2 move_id_3 move_id_4");
-        return 1;
+    get_user()->fighter.id = (argc > 1) ? atoi(argv[1]) : get_user()->fighter.id;
+
+    if (argc == 6) {
+        for (int i = 0; i < 4; i++) {
+            get_user()->fighter.moves[i] = atoi(argv[2 + i]);
+        }
     }
 
     FightAd my_ad = get_fight_ad();
-    char moves[] = {atoi(argv[3]), atoi(argv[4]), atoi(argv[5]), atoi(argv[6])};
+
+    return game_controller->me.initiate(*my_ad.uuid,
+                                        *my_ad.sequenceNumber + 1,
+                                        opponent->uuid,
+                                        sys_rand32_get(),
+                                        get_user()->fighter.id,
+                                        get_user()->fighter.moves);
+}
+
+int accept_cmd(const struct shell *shell, int argc, char **argv) {
+    if (!(argc == 1 || argc == 2 || argc == 6)) {
+        shell_print(shell, "Usage: fight accept opponent_uuid [fighter_id [move_id_1 move_id_2 move_id_3 move_id_4]]");
+        return 1;
+    }
+
+    Player* challenger = find_player_by_name(get_arena()->pendingPlayers, get_arena()->pendingCount, argv[0]);
+    if (!challenger) {
+        shell_print(shell, "Challenger \"%s\" not found.", argv[0]);
+        return 2;
+    }
+
+    if (challenger->challengee != *get_fight_ad().uuid) {
+        shell_print(shell, "Challenger \"%s\" is not challenging us.", challenger->name);
+        return 3;
+    }
+
+    uint32_t sessionID = challenger->sessionID;
+    int fighter = (argc > 1) ? atoi(argv[1]) : get_user()->fighter.id;
+    get_user()->fighter.id = fighter;
+
+    if (argc == 6) {
+        for (int i = 0; i < 4; i++) {
+            get_user()->fighter.moves[i] = atoi(argv[2 + i]);
+        }
+    }
+
+    FightAd my_ad = get_fight_ad();
+
     return game_controller->me.accept(*my_ad.uuid,
-                                      *my_ad.sequenceNumber + 1,
-                                      strtol(argv[0], NULL, 0),
-                                      strtol(argv[1], NULL, 0),
-                                      atoi(argv[2]),
-                                      moves);
+                                        *my_ad.sequenceNumber + 1,
+                                        challenger->uuid,
+                                        sessionID,
+                                        fighter,
+                                        get_user()->fighter.moves);
 }
 
 int move_cmd(const struct shell *shell, int argc, char **argv) {
@@ -189,7 +233,7 @@ bool arena_observer(const char *mac_addr, int rssi, int type, uint8_t data[], si
                 continue;
             }
 
-            Player* player = find_player(game_controller->arena->players, game_controller->arena->playerCount, *fight_ad.uuid);
+            Player* player = find_player_by_uuid(game_controller->arena->players, game_controller->arena->playerCount, *fight_ad.uuid);
             if (player && player->sequenceNumber == *fight_ad.sequenceNumber) {
                 return true;
             }

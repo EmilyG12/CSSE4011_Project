@@ -24,6 +24,7 @@ target_sources(app PRIVATE
         src/controller.c
         src/game.c
         src/fight.c
+        src/user.c
         src/main.c
 
         src/ui/viewer.c

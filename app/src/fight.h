@@ -11,6 +11,7 @@ typedef struct {
     char name[16];
     int sequenceNumber;
     uint32_t challengee;
+    uint32_t sessionID;
     int fighter;
     char moves[4];
 } Player;
