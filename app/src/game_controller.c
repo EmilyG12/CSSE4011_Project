@@ -237,7 +237,7 @@ int opponent_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID){
 }
 
 int opponent_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i){
-    int updated = register_fled(uuid, seq, sessionID);
+    int updated = register_move(uuid, seq, sessionID, i);
     if (updated > 0) {
         Player* myOpponent = controller.opponent.player;
         if (!myOpponent) {

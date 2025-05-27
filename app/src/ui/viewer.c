@@ -238,9 +238,9 @@ void set_button_mode(Button *button, int mode) {
    if (!mode) {
       lv_obj_set_style_bg_color(button->button, lv_palette_main(LV_PALETTE_GREY), 0);
    } else if (mode == 1){
-      lv_obj_set_style_bg_color(button->button, lv_palette_main(LV_PALETTE_BLUE), 0); 
+      lv_obj_set_style_bg_color(button->button, lv_palette_main(LV_PALETTE_LIGHT_BLUE), 0);
    } else if (mode == 2) {
-      lv_obj_set_style_bg_color(button->button, lv_palette_main(LV_PALETTE_PINK), 0); 
+      lv_obj_set_style_bg_color(button->button, lv_palette_main(LV_PALETTE_PINK), 0);
    }
 #endif
 }
@@ -344,16 +344,18 @@ BattleSceneConfig* init_battle_scene(BattleSceneConfig* config) {
    for (int i = 0; i < config->buttonCount; i++) {
       int x = 0;
       int y = BUTTON_POS_1Y + (BUTTON_HEIGHT * (i - 1));
+      int mode = config->buttons[i].on;
       if (i == 0) {
          x = 85;
          y = BUTTON_POS_1Y;
+         mode = 1;
       }
 
       buttons[i] = create_button(config->buttons[i].callback, display.scr,
-         x, y,
+            x, y,
             config->buttons[i].label,
-            80, 45, config->buttons[i].id, buttons + i
-         );
+            80, 45, config->buttons[i].id, buttons + i);
+      set_button_mode(buttons + i, mode);
    }
 
    buttonCount = config->buttonCount;

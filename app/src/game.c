@@ -340,6 +340,9 @@ void print_fights(const struct shell* shell) {
         print_fighter(shell, challenger);
         shell_print(shell, "VS");
         print_fighter(shell, challengee);
+        for (int m = 0; m < arena.fights[i].moveCount; m++) {
+            shell_fprintf_normal(shell, "%d-", arena.fights[i].moves[m]);
+        }
         shell_print(shell, "");
     }
 }
