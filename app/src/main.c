@@ -2,6 +2,7 @@
 // Created by Sioryn Willett on 2025-05-18.
 //
 
+#include <user.h>
 #include <zephyr/kernel.h>
 #include <zephyr/shell/shell.h>
 #include "controller.h"
@@ -22,6 +23,7 @@ int cmd_fight(const struct shell* shell, int argc, char *argv[]) {
 }
 
 SHELL_CMD_REGISTER(fight, NULL, "Start a fight with a nearby player", cmd_fight);
+SHELL_CMD_REGISTER(figth, NULL, "Start a fight with a nearby player", cmd_fight);
 
 
 void pingu(int id) {
@@ -29,6 +31,9 @@ void pingu(int id) {
 }
 
 int main(void) {
+    set_user_name("debbie");
+    set_user_fighter(1, (char[]){2, 3, 4, 5});
+
     if (init_fight_bt()) {
         LOG_ERR("Failed to initialize fight ad");
         return 1;

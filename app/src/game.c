@@ -3,9 +3,7 @@
 //
 
 #include "game.h"
-
-#include <pokedex.h>
-
+#include "pokedex.h"
 #include "fight.h"
 
 #include <zephyr/bluetooth/gap.h>
@@ -62,7 +60,6 @@ Fight* find_fight(Fight* fights, int fightCount, uint32_t sessionID) {
             return fights + i;
         }
     }
-
     return NULL;
 }
 
@@ -96,7 +93,6 @@ Player* find_or_create(uint32_t uuid, uint16_t seq, const char* name) {
     player->sequenceNumber = seq - 1;
     name = name ? name : "<unknown>";
     strncpy(player->name, name, 16);
-
     add_player(arena.players, &arena.playerCount, player);
 
     return player;
@@ -278,6 +274,9 @@ int register_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int move) {
     Player* opponent = (fight->players[0]->uuid == known->uuid) ? fight->players[1] : fight->players[0];
     int damage = calculate_damage(m, get_pokemon(known->fighter), get_pokemon(opponent->fighter));
     opponent->hp -= damage;
+    if (opponent->hp <= 0) {
+        fight->winner = known;
+    }
 
     LOG_INF("[%s: 0x%x] Performed a %s against [%s: 0x%x] dealing %d damage",
         known->name, known->uuid, m->name, opponent->name, opponent->uuid, damage);
@@ -289,20 +288,24 @@ int register_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID) {
                 uuid, seq, sessionID);
     Fight* fight = find_fight(arena.fights, arena.fightCount, sessionID);
     if (!fight) {
+        LOG_ERR("Fight not recognised");
         return -1;
     }
 
     Player* player = find_player_by_uuid(fight->players, 2, uuid);
     if (!player) {
+        LOG_ERR("Player not a member of that fight");
         return -2;
     }
 
     if (player->sequenceNumber == seq) {
         return 0;
     }
-
     player->sequenceNumber = seq;
 
+    fight->winner = player->uuid == fight->players[0]->uuid
+            ? fight->players[1]
+            : fight->players[0];
 
     return 1;
 }
@@ -340,8 +343,7 @@ void print_challenges(const struct shell* shell) {
             get_move(challenger->moves[0])->name,
             get_move(challenger->moves[1])->name,
             get_move(challenger->moves[2])->name,
-            get_move(challenger->moves[3])->name
-            );
+            get_move(challenger->moves[3])->name);
     }
     shell_print(shell, "");
 }
@@ -359,6 +361,26 @@ void print_fighter(const struct shell* shell, Player* player) {
             get_move(player->moves[3])->name);
 }
 
+void print_fight(const struct shell* shell, Fight* fight) {
+    Player* challenger = fight->players[0];
+    Player* challengee = fight->players[1];
+
+    print_fighter(shell, challenger);
+    const char* state = (!fight->winner) ? "VS" :
+            (fight->winner == challenger) ?
+                    "defeated" : "lost to";
+    shell_print(shell, "%s", state);
+    print_fighter(shell, challengee);
+    for (int m = 0; m < fight->moveCount; m++) {
+        int fighter_move_number = fight->moves[m];
+        char global_move_number = fight->players[m % 2]->moves[fighter_move_number];
+        Move* move = get_move(global_move_number);
+
+        shell_fprintf_normal(shell, "%s%s", move->name, m % 2 ? " - " : "|");
+    }
+    shell_print(shell, "");
+}
+
 void print_fights(const struct shell* shell) {
     if (!arena.fightCount) {
         shell_print(shell, "No ongoing fights");
@@ -367,20 +389,18 @@ void print_fights(const struct shell* shell) {
 
     shell_print(shell, "Ongoing fights:");
     for (int i = 0; i < arena.fightCount; i++) {
-        Player* challenger = arena.fights[i].players[0];
-        Player* challengee = arena.fights[i].players[1];
-
-        print_fighter(shell, challenger);
-        shell_print(shell, "VS");
-        print_fighter(shell, challengee);
-        for (int m = 0; m < arena.fights[i].moveCount; m++) {
-            int fighter_move_number = arena.fights[i].moves[m];
-            char global_move_number = arena.fights[i].players[m % 2]->moves[fighter_move_number];
-            Move* move = get_move(global_move_number);
-
-            shell_fprintf_normal(shell, "%s%s", move->name, m % 2 ? " - " : "|");
+        Fight* fight = arena.fights + i;
+        if (!fight->winner) {
+            print_fight(shell, fight);
         }
-        shell_print(shell, "");
+    }
+
+    shell_print(shell, "Finished fights:");
+    for (int i = 0; i < arena.fightCount; i++) {
+        Fight* fight = arena.fights + i;
+        if (fight->winner) {
+            print_fight(shell, fight);
+        }
     }
 }
 
