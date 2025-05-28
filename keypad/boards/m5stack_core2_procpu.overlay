@@ -1,0 +1,45 @@
+#include <zephyr/dt-bindings/input/input-event-codes.h>
+#include <zephyr/dt-bindings/input/keymap.h>
+
+/ {
+    kbdmatrix: kbdmatrix {
+        compatible = "gpio-kbd-matrix";
+        status = "okay";
+        row-gpios = <&gpio0 19 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>,  
+                    <&gpio0 14 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>,
+                    <&gpio0 26 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>, 
+                    <&gpio0 25 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
+        col-gpios = <&gpio0 34 GPIO_ACTIVE_LOW>,
+                    <&gpio0 27 GPIO_ACTIVE_LOW>,
+                    <&gpio0 32 GPIO_ACTIVE_LOW>,
+                    <&gpio0 13  GPIO_ACTIVE_LOW>; 
+        settle-time-us = <0>;
+        no-ghostkey-check;
+
+    
+        keymap {
+            compatible = "input-keymap";
+            status = "okay";
+            keymap = <
+            MATRIX_KEY(0, 0, INPUT_KEY_1)
+            MATRIX_KEY(0, 1, INPUT_KEY_2)
+            MATRIX_KEY(0, 2, INPUT_KEY_3)
+            MATRIX_KEY(0, 3, INPUT_KEY_A)
+            MATRIX_KEY(1, 0, INPUT_KEY_4)
+            MATRIX_KEY(1, 1, INPUT_KEY_5)
+            MATRIX_KEY(1, 2, INPUT_KEY_6)
+            MATRIX_KEY(1, 3, INPUT_KEY_B)
+            MATRIX_KEY(2, 0, INPUT_KEY_7)
+            MATRIX_KEY(2, 1, INPUT_KEY_8)
+            MATRIX_KEY(2, 2, INPUT_KEY_9)
+            MATRIX_KEY(2, 3, INPUT_KEY_C)
+            MATRIX_KEY(3, 0, INPUT_KEY_0)
+            MATRIX_KEY(3, 1, INPUT_KEY_F)
+            MATRIX_KEY(3, 2, INPUT_KEY_E)
+            MATRIX_KEY(3, 3, INPUT_KEY_D)
+            >;
+            row-size = <4>;
+            col-size = <4>;
+        };
+    };
+};
