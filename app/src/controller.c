@@ -18,13 +18,13 @@ GameController *game_controller = NULL;
 
 int wait_cmd(const struct shell *shell, int argc, char **argv) {
     if (argc > 1) {
-        shell_print(shell, "Usage: fight wait [name]");
+        LOG_ERR("Usage: fight wait [name]");
         return 1;
     }
 
     const char* username = argc == 1 ? argv[0] : get_user()->name;
     if (!username) {
-        shell_print(shell, "Usage: fight wait name");
+        LOG_ERR("Usage: fight wait name");
         return 2;
     }
 
@@ -36,13 +36,13 @@ int wait_cmd(const struct shell *shell, int argc, char **argv) {
 
 int initiate_cmd(const struct shell *shell, int argc, char **argv) {
     if (!(argc == 1 || argc == 2 || argc == 6)) {
-        shell_print(shell, "Usage: fight initiate opponent [fighter_id [move_id_1 move_id_2 move_id_3 move_id_4]]");
+        LOG_ERR("Usage: fight initiate opponent [fighter_id [move_id_1 move_id_2 move_id_3 move_id_4]]");
         return 1;
     }
 
     Player* opponent = find_player_by_name(get_arena()->players, get_arena()->playerCount, argv[0]);
     if (!opponent) {
-        shell_print(shell, "Player \"%s\" not found", argv[0]);
+        LOG_ERR("Player \"%s\" not found", argv[0]);
         return 2;
     }
 
@@ -66,18 +66,18 @@ int initiate_cmd(const struct shell *shell, int argc, char **argv) {
 
 int accept_cmd(const struct shell *shell, int argc, char **argv) {
     if (!(argc == 1 || argc == 2 || argc == 6)) {
-        shell_print(shell, "Usage: fight accept opponent [fighter_id [move_id_1 move_id_2 move_id_3 move_id_4]]");
+        LOG_ERR("Usage: fight accept opponent [fighter_id [move_id_1 move_id_2 move_id_3 move_id_4]]");
         return 1;
     }
 
     Player* challenger = find_player_by_name(get_arena()->pendingPlayers, get_arena()->pendingCount, argv[0]);
     if (!challenger) {
-        shell_print(shell, "Challenger \"%s\" not found.", argv[0]);
+        LOG_ERR("Challenger \"%s\" not found.", argv[0]);
         return 2;
     }
 
     if (challenger->challengee != *get_fight_ad().uuid) {
-        shell_print(shell, "Challenger \"%s\" is not challenging us.", challenger->name);
+        LOG_ERR("Challenger \"%s\" is not challenging us.", challenger->name);
         return 3;
     }
 
@@ -104,7 +104,7 @@ int accept_cmd(const struct shell *shell, int argc, char **argv) {
 
 int move_cmd(const struct shell *shell, int argc, char **argv) {
     if (argc != 1) {
-        shell_print(shell, "Usage: fight move move_id");
+        LOG_ERR("Usage: fight move move_id");
         return 1;
     }
 
@@ -114,7 +114,7 @@ int move_cmd(const struct shell *shell, int argc, char **argv) {
 
 int flee_cmd(const struct shell *shell, int argc, char **argv) {
     if (argc != 0) {
-        shell_print(shell, "Usage: fight flee");
+        LOG_ERR("Usage: fight flee");
         return 1;
     }
 
@@ -124,12 +124,12 @@ int flee_cmd(const struct shell *shell, int argc, char **argv) {
 
 int process_cmd(const struct shell *shell, int argc, char **argv) {
     if (!game_controller) {
-        shell_print(shell, "Game has not been initialised");
+        LOG_ERR("Game has not been initialised");
         return 1;
     }
 
     if (argc < 1) {
-        shell_print(shell, "Usage: fight command [args]");
+        LOG_ERR("Usage: fight command [args]");
         return 2;
     }
 
@@ -146,7 +146,7 @@ int process_cmd(const struct shell *shell, int argc, char **argv) {
         }
     }
 
-    shell_print(shell, "\"%s\" command not recognised", argv[0]);
+    LOG_ERR("\"%s\" command not recognised", argv[0]);
     return -1;
 }
 
@@ -293,6 +293,7 @@ InputController init_input_controller(GameController *controller) {
 
     k_queue_init(&bt_queue);
     k_queue_init(&cmd_queue);
+
     return (InputController){
         .command = command_observer,
         .buttonPressed = button_pressed,
