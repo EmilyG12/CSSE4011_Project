@@ -172,12 +172,16 @@ int command_observer(const struct shell *shell, int argc, char **argv) {
     return 0;
 }
 
+K_QUEUE_DEFINE(button_queue);
+
 void button_pressed(char letter) {
     if (!game_controller) {
         return;
     }
-    
-    // TODO
+
+    char* c = malloc(sizeof(char));
+    *c = letter;
+    k_queue_append(&button_queue, c);
 }
 
 void copy_moves(char* out, uint8_t* in) {
@@ -249,6 +253,17 @@ void process_queue(void) {
         }
         free(cmd->argv);
         free(cmd);
+    }
+
+    while (!k_queue_is_empty(&button_queue)) {
+        char* c = k_queue_get(&button_queue, K_MSEC(10));
+        if (!c) {
+            return;
+        }
+
+        game_controller->button_pressed(*c);
+
+        free(c);
     }
 }
 

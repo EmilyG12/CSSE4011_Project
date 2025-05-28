@@ -260,6 +260,17 @@ int opponent_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i){
     return updated;
 }
 
+void game_button_pressed(char letter) {
+    if (conn_config.buttons) {
+        LOG_INF("Button pressed (%c) during the wait screen", letter);
+        return;
+    }
+
+    if (battle_config.buttons) {
+        LOG_INF("Button pressed (%c) during the battle screen", letter);
+    }
+}
+
 GameController *init_game(void) {
     controller = (GameController){
         .me = {
@@ -277,6 +288,7 @@ GameController *init_game(void) {
             .move = opponent_move,
         },
         .arena = get_arena(),
+        .button_pressed = game_button_pressed
     };
 
     return &controller;

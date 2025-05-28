@@ -20,6 +20,7 @@ typedef struct {
 typedef struct {
     PlayerController me;
     PlayerController opponent;
+    void(*button_pressed)(char letter);
     Arena* arena;
 } GameController;
 
