@@ -6,7 +6,6 @@
 
 #include <fight_ad.h>
 #include "game.h"
-#include "pokedex.h"
 #include "bt/bluetooth.h"
 #include "ui/viewer.h"
 #include "ui_controller.h"
@@ -17,30 +16,39 @@ LOG_MODULE_DECLARE(app);
 GameController controller;
 UiController *ui;
 
-
 int player_waiting(uint32_t uuid, uint16_t seq, const char* name) {
+    int updated = register_waiting(uuid, seq, name);
+    if (updated < 0) {
+        LOG_ERR("register waiting failed", name);
+        return updated;
+    }
+
     int err = fight_ad_waiting(name);
     if (err){
         LOG_ERR("ad failed :\'(");
         return err;
     }
 
-    int updated = register_waiting(uuid, seq, name);
-    if (updated > 0) {
-        controller.me.player = find_player_by_uuid(controller.arena->players, controller.arena->playerCount, uuid);
-        ui->waiting.init();
-        // init_waiting_screen();
-    }
-    return err;
+    controller.me.player = find_player_by_uuid(controller.arena->players, controller.arena->playerCount, uuid);
+    ui->waiting.init();
+
+    return 0;
 }
 
 int player_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]) {
+    int updated = register_initiate(uuid, seq, opponentUUID, sessionID, fighter, moves);
+    if (updated < 0) {
+        LOG_ERR("register initiate failed");
+        return updated;
+    }
+
     int err = fight_ad_initiate(opponentUUID, sessionID, fighter, moves);
     if (err){
         LOG_ERR("ad failed :\'(");
         return err;
     }
-    return register_initiate(uuid, seq, opponentUUID, sessionID, fighter, moves);
+
+    return 0;
 }
 
 int player_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]) {
@@ -62,25 +70,34 @@ int player_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t s
 }
 
 int player_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID) {
+    int updated = register_fled(uuid, seq, sessionID);
+    if (updated < 0) {
+        LOG_ERR("register fled failed");
+        return updated;
+    }
+
     int err = fight_ad_flee();
     if (err){
         LOG_ERR("ad failed :\'(");
         return err;
     }
 
-    // TODO go back splash screen
-
-    return register_fled(uuid, seq, sessionID);
+    return 0;
 }
 
 int player_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i) {
+    int updated = register_move(uuid, seq, sessionID, i);
+    if (updated < 0) {
+        LOG_ERR("register move failed");
+        return updated;
+    }
+
     int err = fight_ad_move(i);
     if (err){
         LOG_ERR("ad failed :\'(");
         return err;
     }
 
-    register_move(uuid, seq, sessionID, i);
     ui->battle.update();
 
     return 0;
