@@ -39,14 +39,13 @@ int cmd_user_name(const struct shell* shell, int argc, char* argv[]){
 
 int cmd_user_fighter(const struct shell* shell, int argc, char* argv[]){
     if (argc > 1) {
-        user_data.fighter.id = strtol(argv[1], NULL, 10);
-        Pokemon* pokemon = get_pokemon(user_data.fighter.id);
+        Pokemon* pokemon = get_pokemon_by_name(argv[1]);
+        user_data.fighter.id = pokemon->id;
 
         for (int i = 0; i < 4; i++){
             user_data.fighter.moves[i] = (argc > 2 + i) ? strtol(argv[2 + i], NULL, 10) : pokemon->legalMoves[i];
         }
     }
-
 
     shell_print(shell, "%s:", get_pokemon(user_data.fighter.id)->name);
     for (int i = 0; i < 4; i++){
