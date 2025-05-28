@@ -347,9 +347,12 @@ void print_challenges(const struct shell* shell) {
 }
 
 void print_fighter(const struct shell* shell, Player* player) {
-    shell_print(shell, "[%s: 0x%x] with fighter (%s){%s, %s, %s, %s}",
+    Pokemon* p = get_pokemon(player->fighter);
+    shell_print(shell, "[%s: 0x%x] with fighter %s (%d/%d){%s, %s, %s, %s}",
             player->name, player->uuid,
-            get_pokemon(player->fighter)->name,
+            p->name,
+            player->hp,
+            p->maxHP,
             get_move(player->moves[0])->name,
             get_move(player->moves[1])->name,
             get_move(player->moves[2])->name,

@@ -154,7 +154,7 @@ void ui_button_pressed(char letter) {
         if (move >= 0 && move < 4) {
             g_controller->me.move(
                 *get_fight_ad().uuid,
-                *get_fight_ad().sequenceNumber,
+                *get_fight_ad().sequenceNumber + 1,
                 *get_fight_ad().sessionID,
                 letter - '1');
         }
