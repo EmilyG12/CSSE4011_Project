@@ -80,6 +80,9 @@ void update_fight_screen(bool buttonsOn) {
     for (int i = 1; i < battle_config.buttonCount; i++) {
         battle_config.buttons[i].on = buttonsOn;
     }
+
+    battle_config.me.health = controller.me.player->hp;
+    battle_config.opponent.health = controller.opponent.player->hp;
     update_battle_scene(&battle_config);
 }
 
@@ -182,9 +185,10 @@ int player_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i) {
         return err;
     }
 
+    register_move(uuid, seq, sessionID, i);
     update_fight_screen(false);
 
-    return register_move(uuid, seq, sessionID, i);
+    return 0;
 }
 
 int opponent_waiting(uint32_t uuid, uint16_t seq, const char* name) {

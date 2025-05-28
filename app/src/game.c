@@ -168,6 +168,7 @@ int register_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32
     known->challengee = opponentUUID;
     known->sessionID = sessionID;
     known->fighter = fighter;
+    known->hp = get_pokemon(fighter)->maxHP;
     memcpy(known->moves, moves, 4);
 
     Player* challengee = find_player_by_uuid(arena.waitingPlayers, arena.waitingCount, opponentUUID);
@@ -209,6 +210,7 @@ int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
         remove_player(arena.waitingPlayers, &arena.waitingCount, player);
 
         player->fighter = fighter;
+        player->hp = get_pokemon(fighter)->maxHP;
         memcpy(player->moves, moves, 4);
         player->sessionID = sessionID;
 
@@ -224,6 +226,12 @@ int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
     LOG_INF("[%s (%d->%d)]: Accepted a duel (uuid: 0x%x)(session: 0x%x)",
         player->name, lastSeq, player->sequenceNumber, player->uuid, sessionID);
     return 1;
+}
+
+int calculate_damage(Move* move, Pokemon* attacker, Pokemon* defender) {
+    int physicalDamage = (move->power * attacker->power) / defender->defense;
+    int specialDamage = (move->specialPower * attacker->specialPower) / defender->specialDefense;
+    return physicalDamage + specialDamage;
 }
 
 int register_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int move) {
@@ -255,11 +263,24 @@ int register_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int move) {
         return -3;
     }
 
-    fight->moves[fight->moveCount++] = move;
+    if (move < 0 || move > 3) {
+        LOG_ERR("[%s: 0x%x] invalid move number %d", player->name, player->uuid, move);
+        return -4;
+    }
 
+    Move* m = get_move(known->moves[move]);
+    if (!m->id) {
+        LOG_ERR("[%s: 0x%x] invalid move %d", player->name, player->uuid, known->moves[move]);
+        return -5;
+    }
+
+    fight->moves[fight->moveCount++] = move;
     Player* opponent = (fight->players[0]->uuid == known->uuid) ? fight->players[1] : fight->players[0];
-    LOG_INF("[%s: 0x%x] Performed a %d move against [%s: 0x%x]",
-        known->name, known->uuid, move, opponent->name, opponent->uuid);
+    int damage = calculate_damage(m, get_pokemon(known->fighter), get_pokemon(opponent->fighter));
+    opponent->hp -= damage;
+
+    LOG_INF("[%s: 0x%x] Performed a %s against [%s: 0x%x] dealing %d damage",
+        known->name, known->uuid, m->name, opponent->name, opponent->uuid, damage);
     return 1;
 }
 

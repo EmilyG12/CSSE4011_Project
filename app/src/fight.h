@@ -13,6 +13,7 @@ typedef struct {
     uint32_t challengee;
     uint32_t sessionID;
     int fighter;
+    int hp;
     char moves[4];
 } Player;
 
