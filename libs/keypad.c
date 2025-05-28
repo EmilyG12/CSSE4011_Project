@@ -62,13 +62,10 @@ static void kp_callback(struct input_event *evt, void *user_data)
                     break;
                 }
             }
-        }    
-        char *mempad = malloc(sizeof(char));
-        *mempad = letter; // Store the pressed key character
-        // k_queue_append(&kp_queue, mempad);
+        }
+
         keypad.x = 50;
         keypad.y = 50;
-
 
         if (user_kp_callback) {
             user_kp_callback(letter); // Replace 'a' with the actual character based on your logic
