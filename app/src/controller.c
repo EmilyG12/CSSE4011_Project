@@ -179,9 +179,12 @@ void button_pressed(char letter) {
         return;
     }
 
-    char* c = malloc(sizeof(char));
-    *c = letter;
-    k_queue_append(&button_queue, c);
+    char* c = malloc(sizeof(char) * 2);
+    c[0] = letter;
+    c[1] = '\0';
+    char** v = malloc(sizeof(char*) * 1);
+    *v = c;
+    k_queue_append(&button_queue, v);
 }
 
 void copy_moves(char* out, uint8_t* in) {
@@ -256,14 +259,15 @@ void process_queue(void) {
     }
 
     while (!k_queue_is_empty(&button_queue)) {
-        char* c = k_queue_get(&button_queue, K_MSEC(10));
-        if (!c) {
+        char** v = k_queue_get(&button_queue, K_MSEC(10));
+        if (!v) {
             return;
         }
 
-        game_controller->button_pressed(*c);
+        game_controller->button_pressed(**v);
 
-        free(c);
+        free(*v);
+        free(v);
     }
 }
 
