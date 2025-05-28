@@ -7,6 +7,7 @@
 #include "ui/viewer.h"
 #include "ui_controller.h"
 
+#include <user.h>
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(app);
 
@@ -148,7 +149,16 @@ void init_fight_screen(void) {
 }
 
 void ui_button_pressed(char letter) {
-// 
+    if (ui_controller.battle.update && buttonsOn()) {
+        int move  = letter - '1';
+        if (move >= 0 && move < 4) {
+            g_controller->me.move(
+                *get_fight_ad().uuid,
+                *get_fight_ad().sequenceNumber,
+                *get_fight_ad().sessionID,
+                letter - '1');
+        }
+    }
 }
 
 UiController *init_ui(GameController *ctrl) {
