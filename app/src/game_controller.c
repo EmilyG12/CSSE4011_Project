@@ -80,9 +80,10 @@ int player_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i) {
         return err;
     }
 
+    register_move(uuid, seq, sessionID, i);
     ui->battle.update();
 
-    return register_move(uuid, seq, sessionID, i);
+    return 0;
 }
 
 int opponent_waiting(uint32_t uuid, uint16_t seq, const char* name) {
