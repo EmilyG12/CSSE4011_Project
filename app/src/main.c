@@ -34,14 +34,12 @@ int main(void) {
     }
 
     game = init_game();
-    // input_controller = init_input_controller(game);
+    input_controller = init_input_controller(game);
 
     if (!register_observer((Observer) {.filter = NULL, .callback = input_controller.observer})) {
         LOG_ERR("Failed to initialise bt input");
         return 2;
     }
-
-    // TODO init the push buttons to call ic.buttonPressed
 
     set_user_kp_callback(input_controller.buttonPressed);
     init_screen();

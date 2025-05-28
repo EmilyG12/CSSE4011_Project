@@ -22,9 +22,9 @@ Pokemon all_pokemon[] = {
 };
 
 Move all_moves[] = {
-//  {N, "name",				ATK, Sp.ATK},
+//  {N, "name",				                   ATK,          Sp.ATK},
     { 0, "nothing",			  0,	  0},
-    { 1, "chop",			  1,	  0},
+    { 1, "chop",				  1,	  0},
     { 2, "Tackle",			 40,	  0},
     { 3, "Vine Whip",		 45,	  0},
     { 4, "Razor Leaf",		 55,	  0},
@@ -43,7 +43,7 @@ Move all_moves[] = {
     {17, "Flare Blitz",	    100,	  0},
     {18, "Water Gun",	      0,	 40},
     {19, "Rapid Spin",	     40,	  0},
-    {20, "Bite",		     50,	  0},
+    {20, "Bite",		    	 50,	  0},
     {21, "Water Pulse",	      0,	 60},
     {22, "Aqua Tail",	     60,	  0},
     {23, "Hydro Pump",	      0,	 90},

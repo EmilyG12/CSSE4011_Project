@@ -449,7 +449,6 @@ void init_screen(void) {
 #endif
 }
 
-
 int update_screen(void) {
 #ifdef CONFIG_LVGL
       return (int) lv_timer_handler();

@@ -25,6 +25,8 @@ typedef struct {
 
 Pokemon* get_pokemon(int id);
 
+Pokemon* get_pokemon_by_name(const char* name);
+
 Move* get_move(char id);
 
 #endif //POKEDEX_H
