@@ -102,6 +102,10 @@ void update_fight_screen(void) {
     for (int i = 1; i < battle_config.buttonCount; i++) {
         battle_config.buttons[i].on = buttonsOn();
     }
+
+    battle_config.me.health = g_controller->me.player->hp;
+    battle_config.opponent.health = g_controller->opponent.player->hp;
+
     update_battle_scene(&battle_config);
 }
 
