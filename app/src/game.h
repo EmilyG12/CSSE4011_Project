@@ -24,7 +24,7 @@ typedef struct {
 Arena* get_arena(void);
 Player* find_player_by_name(Player** players, int playerCount, const char* name);
 Player* find_player_by_uuid(Player** players, int playerCount, uint32_t uuid);
-Fight* find_fight(Fight* fights, int fightCount, uint32_t sessionID)
+Fight* find_fight(Fight* fights, int fightCount, uint32_t sessionID);
 int register_waiting(uint32_t uuid, uint16_t seq, const char* name);
 int register_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]);
 int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]);
