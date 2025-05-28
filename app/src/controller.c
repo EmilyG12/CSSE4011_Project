@@ -179,6 +179,8 @@ void button_pressed(char letter) {
         return;
     }
 
+    LOG_INF("Button pressed %c", letter);
+
     char* c = malloc(sizeof(char));
     *c = letter;
     k_queue_append(&button_queue, c);
