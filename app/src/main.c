@@ -2,6 +2,7 @@
 // Created by Sioryn Willett on 2025-05-18.
 //
 
+#include <zephyr/kernel.h>
 #include <zephyr/shell/shell.h>
 #include "controller.h"
 #include "fight_ad.h"

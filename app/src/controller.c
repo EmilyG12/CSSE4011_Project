@@ -151,6 +151,7 @@ int process_cmd(const struct shell *shell, int argc, char **argv) {
 }
 
 typedef struct {
+    uint32_t reserved;
     const struct shell *shell;
     int argc;
     char** argv;
@@ -179,8 +180,8 @@ void button_pressed(char letter) {
         return;
     }
 
-    char* c = malloc(sizeof(char));
-    *c = letter;
+    char* c = malloc(sizeof(uint32_t) + sizeof(char));
+    c[sizeof(uint32_t)] = letter;
     k_queue_append(&button_queue, c);
 }
 
@@ -226,6 +227,7 @@ int fight_ad_process(FightAd ad) {
 }
 
 typedef struct {
+    uint32_t reserved;
     uint8_t data[32];
     FightAd ad;
 } FightAdMessage;
@@ -261,7 +263,7 @@ void process_queue(void) {
             return;
         }
 
-        game_controller->button_pressed(*c);
+        game_controller->button_pressed(c[sizeof(uint32_t)]);
 
         free(c);
     }

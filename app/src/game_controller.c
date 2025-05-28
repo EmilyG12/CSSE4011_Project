@@ -261,14 +261,16 @@ int opponent_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i){
 }
 
 void game_button_pressed(char letter) {
+    const char* screen = "init phase";
     if (conn_config.buttons) {
-        LOG_INF("Button pressed (%c) during the wait screen", letter);
-        return;
+        screen = "wait screen";
     }
 
     if (battle_config.buttons) {
-        LOG_INF("Button pressed (%c) during the battle screen", letter);
+        screen = "battle screen";
     }
+
+    LOG_INF("Button pressed (%c) during the %s", letter, screen);
 }
 
 GameController *init_game(void) {

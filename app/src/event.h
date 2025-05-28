@@ -13,7 +13,7 @@ typedef struct {
 } Event;
 
 typedef struct {
-
+  int a;
 } Callbacks;
 
 #endif //EVENT_H

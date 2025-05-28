@@ -32,3 +32,6 @@ target_sources(app PRIVATE
         src/ui/viewer.c
         ${IMG_FILES}
 )
+
+
+#target_sources(app PRIVATE src/event.c)
