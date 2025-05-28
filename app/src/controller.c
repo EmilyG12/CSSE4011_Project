@@ -264,9 +264,13 @@ void process_queue(void) {
             return;
         }
 
-        game_controller->button_pressed(**v);
+        char* s = *v;
+        char l = *s;
 
-        free(*v);
+        LOG_ERR("queue_get: %s", s);
+        game_controller->button_pressed(l);
+
+        free(s);
         free(v);
     }
 }

@@ -21,6 +21,7 @@ int cmd_fight(const struct shell* shell, int argc, char *argv[]) {
 }
 
 SHELL_CMD_REGISTER(fight, NULL, "Start a fight with a nearby player", cmd_fight);
+SHELL_CMD_REGISTER(figth, NULL, "Start a fight with a nearby player", cmd_fight);
 
 
 void pingu(int id) {
