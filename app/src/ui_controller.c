@@ -10,7 +10,7 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(app);
 
-GameController *controller;
+GameController *g_controller;
 UiController ui_controller;
 
 
@@ -26,7 +26,11 @@ BattleSceneConfig battle_config = {
     .buttonCount = 0
 };
 
-void do_nothing(void) {}
+void do_nothing(int i) {}
+
+void do_nothing_void(void) {
+
+}
 
 void clear(void) {
     battle_config.buttons = NULL;
@@ -34,6 +38,9 @@ void clear(void) {
 
     conn_config.buttons = NULL;
     conn_config.buttonCount = 0;
+
+    ui_controller.battle.update = do_nothing_void;
+    ui_controller.waiting.update = do_nothing_void;
 }
 
 void update_waiting_screen(void) {
@@ -42,10 +49,10 @@ void update_waiting_screen(void) {
     }
 
     conn_config.buttonCount = 1;
-    for (int i = 0; i < controller.arena->pendingCount; i++) {
-        if (controller.arena->pendingPlayers[i]->challengee == controller.me.player->uuid) {
+    for (int i = 0; i < g_controller->arena->pendingCount; i++) {
+        if (g_controller->arena->pendingPlayers[i]->challengee == g_controller->me.player->uuid) {
             waitingButtons[conn_config.buttonCount++] = (ButtonConfig){
-                .label = controller.arena->pendingPlayers[i]->name,
+                .label = g_controller->arena->pendingPlayers[i]->name,
                 .id = conn_config.buttonCount - 1,
                 .callback = do_nothing,
                 .on = 2
@@ -53,12 +60,12 @@ void update_waiting_screen(void) {
         }
     }
 
-    for (int i = 0; i < controller.arena->waitingCount; i++) {
-        if (controller.arena->waitingPlayers[i]->uuid == controller.me.player->uuid) {
+    for (int i = 0; i < g_controller->arena->waitingCount; i++) {
+        if (g_controller->arena->waitingPlayers[i]->uuid == g_controller->me.player->uuid) {
             continue;
         }
         waitingButtons[conn_config.buttonCount++] = (ButtonConfig){
-            .label = controller.arena->waitingPlayers[i]->name,
+            .label = g_controller->arena->waitingPlayers[i]->name,
             .id = conn_config.buttonCount - 1,
             .callback = do_nothing,
             .on = true
@@ -72,7 +79,6 @@ void init_waiting_screen(void) {
     LOG_INF("Changing to connection scene");
     clear();
     ui_controller.waiting.update = update_waiting_screen;
-    ui_controller.battle.update = do_nothing;
     waitingButtons[0] = (ButtonConfig){.label = "back", 0, true, do_nothing};
     conn_config.buttons = waitingButtons;
     conn_config.buttonCount = 1;
@@ -81,8 +87,8 @@ void init_waiting_screen(void) {
 }
 
 bool buttonsOn(void) {
-        bool wentFirst = !!controller.me.player->challengee;
-        Fight* f = find_fight(controller.arena->fights, controller.arena->fightCount, controller.me.player->sessionID);
+        bool wentFirst = !!g_controller->me.player->challengee;
+        Fight* f = find_fight(g_controller->arena->fights, g_controller->arena->fightCount, g_controller->me.player->sessionID);
         if (!f) {
             return false;   
         }
@@ -106,7 +112,7 @@ PlayerDisplayConfig init_player_config(Player* player) {
         .name = player->name,
         .spriteName = get_pokemon(player->fighter)->name,
         .turn = !!player->challengee,
-        .playerNum = controller.me.player->uuid == player->uuid ? 1 : 2
+        .playerNum = g_controller->me.player->uuid == player->uuid ? 1 : 2
     };
 
     return config;
@@ -114,14 +120,12 @@ PlayerDisplayConfig init_player_config(Player* player) {
 
 void init_fight_screen(void) {
     LOG_INF("Changing to battle scene");
-    if (!controller.me.player || !controller.opponent.player) {
+    if (!g_controller->me.player || !g_controller->opponent.player) {
         LOG_ERR("Failed to initialize battle scene");
         return;
     }
 
     clear();
-
-    ui_controller.waiting.update = do_nothing;
     ui_controller.battle.update = update_fight_screen;
 
     moveButtons[0] = (ButtonConfig){.label = "flee", 2, true, do_nothing};
@@ -129,32 +133,32 @@ void init_fight_screen(void) {
     battle_config.buttonCount = 1;
     for (int i = 0; i < 4; i++) {
         moveButtons[battle_config.buttonCount++] = (ButtonConfig){
-            .label = get_move(controller.me.player->moves[i])->name,
+            .label = get_move(g_controller->me.player->moves[i])->name,
             i, buttonsOn(), do_nothing};
     }
 
-    battle_config.me = init_player_config(controller.me.player);
-    battle_config.opponent = init_player_config(controller.opponent.player);
+    battle_config.me = init_player_config(g_controller->me.player);
+    battle_config.opponent = init_player_config(g_controller->opponent.player);
 
     init_battle_scene(&battle_config);
 }
 
-void button_pressed(char letter) {
+void ui_button_pressed(char letter) {
 // 
 }
 
 UiController *init_ui(GameController *ctrl) {
-    controller = ctrl;
-    ui_controller.battle = {
-        .init = init_fight_screen
-        .update = do_nothing
+    g_controller = ctrl;
+    ui_controller.battle = (ScreenController){
+        .init = init_fight_screen,
+        .update = do_nothing_void
     };
-    ui_controller.waiting = {
+    ui_controller.waiting = (ScreenController) {
         .init = init_waiting_screen,
-        .update = do_nothing
+        .update = do_nothing_void
     };
 
-    ui_controller.buttonPressed = button_pressed;
+    ui_controller.buttonPressed = ui_button_pressed;
     
     return &ui_controller;
 }

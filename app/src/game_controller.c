@@ -15,7 +15,7 @@
 LOG_MODULE_DECLARE(app);
 
 GameController controller;
-UiController ui;
+UiController *ui;
 
 
 int player_waiting(uint32_t uuid, uint16_t seq, const char* name) {
@@ -28,7 +28,7 @@ int player_waiting(uint32_t uuid, uint16_t seq, const char* name) {
     int updated = register_waiting(uuid, seq, name);
     if (updated > 0) {
         controller.me.player = find_player_by_uuid(controller.arena->players, controller.arena->playerCount, uuid);
-        ui.connections->init();
+        ui->waiting.init();
         // init_waiting_screen();
     }
     return err;
@@ -57,7 +57,7 @@ int player_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t s
     }
 
     controller.opponent.player = find_player_by_uuid(controller.arena->players, controller.arena->playerCount, opponentUUID);
-    init_fight_screen(false);
+    ui->battle.init();
     return 0;
 }
 
@@ -80,7 +80,7 @@ int player_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i) {
         return err;
     }
 
-    update_fight_screen(false);
+    ui->battle.update();
 
     return register_move(uuid, seq, sessionID, i);
 }
@@ -88,7 +88,7 @@ int player_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i) {
 int opponent_waiting(uint32_t uuid, uint16_t seq, const char* name) {
     int updated = register_waiting(uuid, seq, name);
     if (updated > 0) {
-        update_waiting_screen();
+        ui->waiting.update();
     }
     return updated;
 }
@@ -96,7 +96,7 @@ int opponent_waiting(uint32_t uuid, uint16_t seq, const char* name) {
 int opponent_initiate(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]) {
     int updated = register_initiate(uuid, seq, opponentUUID, sessionID, fighter, moves);
     if (updated > 0) {
-        update_waiting_screen();
+        ui->waiting.update();
     }
     return updated;
 }
@@ -111,6 +111,7 @@ int opponent_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
 
         if (opponentUUID != controller.me.player->uuid) {
             LOG_INF("that challenge isn't for me");
+            ui->waiting.update();
             return 0;
         }
 
@@ -120,7 +121,7 @@ int opponent_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
         }
 
         controller.opponent.player = find_player_by_uuid(controller.arena->players, controller.arena->playerCount, uuid);
-        init_fight_screen(true);
+        ui->battle.init();
     }
 
     return updated;
@@ -153,13 +154,13 @@ int opponent_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i){
             return 0;
         }
 
-        update_fight_screen(true);
+        ui->battle.update();
     }
     return updated;
 }
 
 void game_button_pressed(char letter) {
-    ui.buttonPressed(letter);
+    ui->buttonPressed(letter);
 }
 
 GameController *init_game(void) {
@@ -183,7 +184,7 @@ GameController *init_game(void) {
     };
 
     //init
-    //controller.ui = init_ui()
+    ui = init_ui(&controller);
 
     return &controller;
 }

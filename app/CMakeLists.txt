@@ -22,12 +22,14 @@ target_include_directories(app PRIVATE src)
 target_sources(app PRIVATE
         src/fight_ad.c
         src/game_controller.c
+        src/ui_controller.c
         src/controller.c
         src/game.c
         src/fight.c
         src/user.c
         src/pokedex.c
         src/main.c
+
 
         src/ui/viewer.c
         ${IMG_FILES}
