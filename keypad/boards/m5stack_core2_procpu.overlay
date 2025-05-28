@@ -9,7 +9,7 @@
                     <&gpio0 14 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>,
                     <&gpio0 26 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>, 
                     <&gpio0 25 (GPIO_PULL_UP | GPIO_ACTIVE_LOW)>;
-        col-gpios = <&gpio0 34 GPIO_ACTIVE_LOW>,
+        col-gpios = <&gpio0 33 GPIO_ACTIVE_LOW>,
                     <&gpio0 27 GPIO_ACTIVE_LOW>,
                     <&gpio0 32 GPIO_ACTIVE_LOW>,
                     <&gpio0 13  GPIO_ACTIVE_LOW>; 
