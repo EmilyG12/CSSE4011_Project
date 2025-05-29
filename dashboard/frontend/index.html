@@ -2,8 +2,7 @@
   <head>
     <title>Artemis</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 
     <style>
       .press-start-2p-regular {
@@ -12,6 +11,12 @@
         font-style: normal;
       }
 
+      table, th, td {
+        width: 80%;
+        padding: 10px;
+        font-family: "Press Start 2P", system-ui;
+      }
+      
       header {
         background-image: url('https://emilyg12.github.io/artemis_assests/Titlebar.png');
         background-size: 150px;
@@ -21,7 +26,12 @@
         text-align: center;
       }
 
-     .mycontainer {
+      .toplay {
+        width: 80%;
+        font-family: "Press Start 2P", system-ui;
+      }
+
+      .mycontainer {
         display: flex;
         justify-items: center;
         padding-top: 20px;
@@ -31,12 +41,27 @@
       }
 
       .mycontainer > div {
-        width:33%;
+        width: 33%;
         align-items: center;
         justify-items: center;
         padding-bottom: 2px;
       }
+      
+      .mycontainer > div:nth-child(1) {
+        background-image: url("https://emilyg12.github.io/artemis_assests/Howtoplay.png");
+        background-size: 80% 80%;
+        background-position: top center;
+        align-content: center;
+        background-repeat: no-repeat;
+      }
 
+      .mycontainer > div:nth-child(3) {
+        background-image: url("https://emilyg12.github.io/artemis_assests/Gamelogbox.png");
+        background-size: 80% 80%;
+        background-position: top center;
+        align-content: center;
+        background-repeat: no-repeat;
+      }
       .pixel-table {
         width: 80%;
         border-spacing: 0;
@@ -47,6 +72,7 @@
         margin-bottom: 40px;
         color: black;
       }
+      
      .pixel-table td {
         padding: 12px;
         text-align: center;
@@ -76,13 +102,21 @@
     </div>
 
    <div class= "mycontainer">
+    <div style="display: flex; justify-content: center;">
+      <header class="header">
+        <img src="https://emilyg12.github.io/artemis_assests/Title.png" style="width: 250px;"/>
+      </header>
+    </div>
+
+    <div class= "mycontainer">
       <div>
-         <img src="https://emilyg12.github.io/artemis_assests/Gamelogbox.png" alt="Leaderboard" style="width: 350px;"/>
+              <div class="toplay">1. Register as a Fighter <br/> <br/> 2. Initiate a Fight <br/> <br/> 3. Challenge a player/accept fight request <br/> <br/> Battle Begins <br/> <br/> 4. Take Your Turn (when buttons turn blue) <br/> <br/> 5. Game ends when player health reaches zero, or player flees the battle
+              </div>
       </div>
 
       <div>
         <img src="https://emilyg12.github.io/artemis_assests/leaderboard.png" alt="Leaderboard" style="width: 400px;"/>
-        <table class="pixel-table">
+        <table class="pixel-table" id="leaderboard">
           <tbody>
             <tr class="row-bg-yellow">
               <td>Player 1</td>
@@ -129,9 +163,22 @@
           </table>
       </div>
       <div>
-        <img src="https://emilyg12.github.io/artemis_assests/Gamelogbox.png" alt="Leaderboard" style="width: 350px;"/>
+        <table>
+          <tbody id="sensor-info">
+            <tr>
+              <td id="Player1">Player 1 Distance</td>
+              <td id="DistanceM1">0 m</td>
+              <td id="DistanceC1">0 cm</td>
+            </tr>
+            <tr>
+              <td id="Player2">Player 2 Distance</td>
+              <td id="DistanceM2">0 m</td>
+              <td id="DistanceC2">0 cm</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-
     </div>
+  <script src="js/app.js?v=1.48"></script>
   </body>
 </html>
