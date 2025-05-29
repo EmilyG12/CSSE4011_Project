@@ -194,7 +194,7 @@ void ui_button_pressed(char letter) {
     
     if (ui_controller.waiting.update != do_nothing_void) {
         int conns = letter - '1';
-        if (conns >= 0 && conns < 9 && (conn_config.buttonCount <= conns)) {
+        if (conns >= 0 && conns < 9 && (conns <= conn_config.buttonCount)) {
             int mode = waitingButtons[conns].on;
             Player* opponent = find_player_by_name(g_controller->arena->players, g_controller->arena->playerCount, waitingButtons[conns].label);
             if (!opponent) {
@@ -255,8 +255,8 @@ UiController *init_ui(GameController *ctrl) {
         .init = init_splash_screen,
         .update = do_nothing_void
     };
-    init_screen();
-    init_splash_screen();
+    // init_screen();
+    // init_splash_screen();
     ui_controller.buttonPressed = ui_button_pressed;
     return &ui_controller;
 }
