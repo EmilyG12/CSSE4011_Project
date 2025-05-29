@@ -91,6 +91,8 @@ int player_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID) {
         return err;
     }
 
+    ui->splash.init();
+
     return 0;
 }
 
@@ -107,7 +109,15 @@ int player_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i) {
         return err;
     }
 
-    ui->battle.update();
+    Fight* f = find_fight(get_arena()->fights, get_arena()->fightCount, sessionID);
+    if (!f || f->winner) {
+        if (!f) {
+            LOG_ERR("you tried to move in a figth that doesn't exist");
+        }
+        ui->splash.init();
+    } else {
+        ui->battle.update();
+    }
 
     return 0;
 }
@@ -160,7 +170,23 @@ int opponent_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
 int opponent_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID) {
     int updated = register_fled(uuid, seq, sessionID);
     if (updated > 0) {
-        // TODO go to splash screen
+        Player *myOpponent = controller.opponent.player;
+        if (!myOpponent) {
+            LOG_DBG("I'm not fighting");
+            return 0;
+        }
+
+        if (myOpponent->uuid != uuid) {
+            LOG_DBG("This isn't your opponent");
+            return 0;
+        }
+
+        if (controller.me.player->sessionID != sessionID) {
+            LOG_DBG("This is your opponent but it's a different fight");
+            return 0;
+        }
+
+        ui->splash.init();
     }
     return updated;
 }
@@ -184,7 +210,15 @@ int opponent_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int i) {
             return 0;
         }
 
-        ui->battle.update();
+        Fight* f = find_fight(get_arena()->fights, get_arena()->fightCount, sessionID);
+        if (!f || f->winner) {
+            if (!f) {
+                LOG_ERR("You opponent somehow moved in a fight that doesn't exist but is also somehow yours");
+            }
+            ui->splash.init();
+        } else {
+            ui->battle.update();
+        }
     }
     return updated;
 }

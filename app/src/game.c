@@ -287,12 +287,14 @@ int register_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int move) {
     int damage = calculate_damage(m, get_pokemon(known->fighter), get_pokemon(opponent->fighter));
     opponent->hp -= damage;
 
+    const char* suffix = "";
     if (opponent->hp <= 0) {
         finalise_fight(fight, player);
+        suffix = " and killing them";
     }
 
-    LOG_INF("[%s: 0x%x] Performed a %s against [%s: 0x%x] dealing %d damage",
-        known->name, known->uuid, m->name, opponent->name, opponent->uuid, damage);
+    LOG_INF("[%s: 0x%x] Performed a %s against [%s: 0x%x] dealing %d damage%s",
+        known->name, known->uuid, m->name, opponent->name, opponent->uuid, damage, suffix);
     return 1;
 }
 
@@ -316,10 +318,13 @@ int register_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID) {
     }
     player->sequenceNumber = seq;
 
-    finalise_fight(fight, player->uuid == fight->players[0]->uuid
+    Player* opponent = (player->uuid == fight->players[0]->uuid)
             ? fight->players[1]
-            : fight->players[0]);
+            : fight->players[0];
 
+    finalise_fight(fight, opponent);
+    LOG_INF("[%s: 0x%x] fled from [%s: 0x%x]",
+        player->name, player->uuid, opponent->name, opponent->uuid);
     return 1;
 }
 

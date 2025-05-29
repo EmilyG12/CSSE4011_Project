@@ -34,10 +34,10 @@ SplashSceneConfig splash_config = {
     .buttonCount = 0
 };
 
-void do_nothing(int i) {}
+void do_nothing(int i) {
+}
 
 void do_nothing_void(void) {
-
 }
 
 void clear(void) {
@@ -60,6 +60,7 @@ void update_splash_screen(void) {
 }
 
 void init_splash_screen(void) {
+    clear();
     splashButtons[splash_config.buttonCount++] = (ButtonConfig){.label = "Connect!", 0, true, do_nothing};
     splashButtons[splash_config.buttonCount++] = (ButtonConfig){.label = "Choose!", 0, true, do_nothing};
     splash_config.buttons = splashButtons;
@@ -111,12 +112,13 @@ void init_waiting_screen(void) {
 }
 
 bool buttonsOn(void) {
-        bool wentFirst = !g_controller->me.player->challengee;
-        Fight* f = find_fight(g_controller->arena->fights, g_controller->arena->fightCount, g_controller->me.player->sessionID);
-        if (!f) {
-            return false;   
-        }
-        return (f->moveCount % 2) == wentFirst;
+    bool wentFirst = !g_controller->me.player->challengee;
+    Fight *f = find_fight(g_controller->arena->fights, g_controller->arena->fightCount,
+                          g_controller->me.player->sessionID);
+    if (!f) {
+        return false;
+    }
+    return (f->moveCount % 2) == wentFirst;
 }
 
 void update_fight_screen(void) {
@@ -133,7 +135,7 @@ void update_fight_screen(void) {
     update_battle_scene(&battle_config);
 }
 
-PlayerDisplayConfig init_player_config(Player* player) {
+PlayerDisplayConfig init_player_config(Player *player) {
     PlayerDisplayConfig config = {
         .health = get_pokemon(player->fighter)->maxHP,
         .healthMax = get_pokemon(player->fighter)->maxHP,
@@ -162,7 +164,8 @@ void init_fight_screen(void) {
     for (int i = 0; i < 4; i++) {
         moveButtons[battle_config.buttonCount++] = (ButtonConfig){
             .label = get_move(g_controller->me.player->moves[i])->name,
-            i, buttonsOn(), do_nothing};
+            i, buttonsOn(), do_nothing
+        };
     }
 
     battle_config.me = init_player_config(g_controller->me.player);
@@ -174,50 +177,53 @@ void init_fight_screen(void) {
 void ui_button_pressed(char letter) {
     if (ui_controller.battle.update != do_nothing_void) {
         if (buttonsOn()) {
-            int move  = letter - '1';
+            int move = letter - '1';
             if (move >= 0 && move < 4) {
-                g_controller->me.move (
-                *get_fight_ad().uuid,
-                *get_fight_ad().sequenceNumber + 1,
-                *get_fight_ad().sessionID,
-                letter - '1'
+                g_controller->me.move(
+                    *get_fight_ad().uuid,
+                    *get_fight_ad().sequenceNumber + 1,
+                    *get_fight_ad().sessionID,
+                    letter - '1'
                 );
             }
-        } else if (letter == '5') {
-            g_controller->me.fled (                
+        }
+
+        if (letter == '5') {
+            g_controller->me.fled(
                 *get_fight_ad().uuid,
                 *get_fight_ad().sequenceNumber + 1,
                 *get_fight_ad().sessionID
             );
         }
     }
-    
+
     if (ui_controller.waiting.update != do_nothing_void) {
         int conns = letter - '1';
         if (conns >= 0 && conns < 9 && (conns <= conn_config.buttonCount)) {
             int mode = waitingButtons[conns].on;
-            Player* opponent = find_player_by_name(g_controller->arena->players, g_controller->arena->playerCount, waitingButtons[conns].label);
+            Player *opponent = find_player_by_name(g_controller->arena->players, g_controller->arena->playerCount,
+                                                   waitingButtons[conns].label);
             if (!opponent) {
                 return;
             }
-            if (mode == 1){
+            if (mode == 1) {
                 // initiate uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]
-                g_controller->me.initiate (
-                    g_controller->me.player->uuid, 
+                g_controller->me.initiate(
+                    g_controller->me.player->uuid,
                     g_controller->me.player->sequenceNumber + 1,
-                    opponent->uuid, 
+                    opponent->uuid,
                     sys_rand32_get(),
                     get_user()->fighter.id,
                     get_user()->fighter.moves
                 );
                 //uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]
-            } else if (mode == 2){
+            } else if (mode == 2) {
                 // accept
-                g_controller->me.accept (
-                    g_controller->me.player->uuid, 
+                g_controller->me.accept(
+                    g_controller->me.player->uuid,
                     g_controller->me.player->sequenceNumber + 1,
-                    opponent->uuid, 
-                    opponent->sessionID, 
+                    opponent->uuid,
+                    opponent->sessionID,
                     get_user()->fighter.id,
                     get_user()->fighter.moves
                 );
@@ -227,17 +233,15 @@ void ui_button_pressed(char letter) {
 
     if (ui_controller.splash.update != do_nothing_void) {
         if (letter == '1') {
-           // uint32_t uuid, uint16_t seq, uint32_t sessionID, int i
+            // uint32_t uuid, uint16_t seq, uint32_t sessionID, int i
             FightAd my_ad = get_fight_ad();
-            // g_controller->me.waiting (
-            //     g_controller->me.player->uuid,
-            //     g_controller->me.player->sequenceNumber + 1,
-            //     get_user()->name
-            // );
+            g_controller->me.waiting(
+                *my_ad.uuid,
+                *my_ad.sequenceNumber + 1,
+                get_user()->name
+            );
         }
     }
-
-    return;
 }
 
 UiController *init_ui(GameController *ctrl) {
@@ -246,17 +250,17 @@ UiController *init_ui(GameController *ctrl) {
         .init = init_fight_screen,
         .update = do_nothing_void
     };
-    ui_controller.waiting = (ScreenController) {
+    ui_controller.waiting = (ScreenController){
         .init = init_waiting_screen,
         .update = do_nothing_void
     };
 
-    ui_controller.splash = (ScreenController) {
+    ui_controller.splash = (ScreenController){
         .init = init_splash_screen,
         .update = do_nothing_void
     };
-    // init_screen();
-    // init_splash_screen();
+    init_screen();
+    init_splash_screen();
     ui_controller.buttonPressed = ui_button_pressed;
     return &ui_controller;
 }

@@ -47,18 +47,7 @@ int main(void) {
         return 2;
     }
 
-    init_screen();
     set_user_kp_callback(input_controller.buttonPressed);
-
-    // FIXME make this a real splash screen
-    ButtonConfig buttons[] = {
-        {.label = "button 1", .id = 1, .on = true, .callback = pingu},
-        {.label = "button 2", .id = 2, .on = 2, .callback = pingu},
-    };
-    ConnectionSceneConfig config = {
-        .buttons = buttons, .buttonCount = ARRAY_SIZE(buttons)
-    };
-    init_connections_scene(&config);
 
     while (true) {
         process_queue();
