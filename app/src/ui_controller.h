@@ -11,6 +11,7 @@ typedef struct {
 typedef struct {
     ScreenController battle;
     ScreenController waiting;
+    ScreenController splash;
     void(*buttonPressed)(char letter);
 } UiController;
 

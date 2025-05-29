@@ -404,6 +404,33 @@ void update_battle_scene(BattleSceneConfig* config) {
 #endif
 }
 
+SplashSceneConfig* init_splash_scene(SplashSceneConfig* config) {
+#ifndef CONFIG_LVGL
+   LOG_DBG("screen not available");
+#else
+lv_obj_clean(display.scr);
+   for (int i = 0; i < config->buttonCount && i < 2; i++) {
+      int x = 40 + (i % 3) * 100;
+      int y = 100;
+      buttons[i] = create_button(config->buttons[i].callback,
+         display.scr,
+         x, y,
+         config->buttons[i].label,
+         90, 45,
+         config->buttons[i].id,
+         buttons + i);
+      set_button_mode(buttons + i, config->buttons[i].on);
+   }
+   buttonCount = config->buttonCount;
+   scene = 3;
+#endif
+   return config;
+}
+
+void update_splash_scene(SplashSceneConfig* config) {
+   init_splash_scene(config);
+}
+
 ConnectionSceneConfig* init_connections_scene(ConnectionSceneConfig* config) {
 #ifndef CONFIG_LVGL
    LOG_DBG("screen not available");
@@ -411,8 +438,8 @@ ConnectionSceneConfig* init_connections_scene(ConnectionSceneConfig* config) {
    lv_obj_clean(display.scr);
 
    for (int i = 0; i < config->buttonCount && i < 9; i++) {
-      int x = 10 + (i / 3) * 100;
-      int y = BUTTON_POS_1Y + (i % 3) * BUTTON_HEIGHT;
+      int x = 10 + (i % 3) * 100;
+      int y = BUTTON_POS_1Y + (i / 3) * BUTTON_HEIGHT;
       buttons[i] = create_button(config->buttons[i].callback,
          display.scr,
          x, y,

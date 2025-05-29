@@ -184,8 +184,6 @@ GameController *init_game(void) {
         .button_pressed = game_button_pressed,
     };
 
-    //init
     ui = init_ui(&controller);
-
     return &controller;
 }

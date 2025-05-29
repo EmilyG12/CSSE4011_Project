@@ -39,4 +39,13 @@ typedef struct {
 BattleSceneConfig* init_battle_scene(BattleSceneConfig* config);
 void update_battle_scene(BattleSceneConfig* config);
 
+typedef struct {
+    ButtonConfig* buttons;
+    int buttonCount;
+} SplashSceneConfig;
+
+SplashSceneConfig* init_splash_scene(SplashSceneConfig* config);
+void update_splash_scene(SplashSceneConfig* config);
+
+
 #endif
