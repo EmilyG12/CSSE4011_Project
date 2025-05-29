@@ -8,3 +8,5 @@ target_sources(app PRIVATE
         ../libs/ultrasonic.c
         ../libs/file_logging.c
 )
+
+target_sources(app PRIVATE src/main.c)
