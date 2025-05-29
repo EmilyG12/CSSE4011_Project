@@ -20,7 +20,6 @@ typedef struct {
     Fight fights[MAX_PLAYERS / 4];
 } Arena;
 
-
 Arena* get_arena(void);
 Player* find_player_by_name(Player** players, int playerCount, const char* name);
 Player* find_player_by_uuid(Player** players, int playerCount, uint32_t uuid);

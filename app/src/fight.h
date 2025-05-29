@@ -20,6 +20,7 @@ typedef struct {
 typedef struct {
     Player* players[2];
     uint32_t sessionID;
+    Player* winner;
     int moveCount;
     int moves[16];
 } Fight;

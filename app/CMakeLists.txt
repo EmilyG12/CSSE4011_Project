@@ -30,7 +30,6 @@ target_sources(app PRIVATE
         src/pokedex.c
         src/main.c
 
-
         src/ui/viewer.c
         ${IMG_FILES}
 )

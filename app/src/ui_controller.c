@@ -111,7 +111,7 @@ void init_waiting_screen(void) {
 }
 
 bool buttonsOn(void) {
-        bool wentFirst = !!g_controller->me.player->challengee;
+        bool wentFirst = !g_controller->me.player->challengee;
         Fight* f = find_fight(g_controller->arena->fights, g_controller->arena->fightCount, g_controller->me.player->sessionID);
         if (!f) {
             return false;   
@@ -156,7 +156,7 @@ void init_fight_screen(void) {
     clear();
     ui_controller.battle.update = update_fight_screen;
 
-    moveButtons[0] = (ButtonConfig){.label = "flee", 2, true, do_nothing};
+    moveButtons[0] = (ButtonConfig){.label = "flee", -1, true, do_nothing};
     battle_config.buttons = moveButtons;
     battle_config.buttonCount = 1;
     for (int i = 0; i < 4; i++) {

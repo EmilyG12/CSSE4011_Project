@@ -4,6 +4,7 @@
 
 #include "controller.h"
 
+#include <pokedex.h>
 #include <zephyr/bluetooth/gap.h>
 #include <zephyr/random/random.h>
 
@@ -46,7 +47,12 @@ int initiate_cmd(const struct shell *shell, int argc, char **argv) {
         return 2;
     }
 
-    get_user()->fighter.id = (argc > 1) ? atoi(argv[1]) : get_user()->fighter.id;
+    if (argc > 1) {
+        int id = get_pokemon_by_name(argv[1])->id;
+        if (id != get_user()->fighter.id) {
+            set_user_fighter(id, (char[]){0,0,0,0});
+        }
+    }
 
     if (argc == 6) {
         for (int i = 0; i < 4; i++) {
@@ -83,8 +89,12 @@ int accept_cmd(const struct shell *shell, int argc, char **argv) {
 
     uint32_t sessionID = challenger->sessionID;
 
-    int fighter = (argc > 1) ? atoi(argv[1]) : get_user()->fighter.id;
-    get_user()->fighter.id = fighter;
+    if (argc > 1) {
+        int id = get_pokemon_by_name(argv[1])->id;
+        if (id != get_user()->fighter.id) {
+            set_user_fighter(id, (char[]){0,0,0,0});
+        }
+    }
 
     if (argc == 6) {
         for (int i = 0; i < 4; i++) {
@@ -98,7 +108,7 @@ int accept_cmd(const struct shell *shell, int argc, char **argv) {
                                         *my_ad.sequenceNumber + 1,
                                         challenger->uuid,
                                         sessionID,
-                                        fighter,
+                                        get_user()->fighter.id,
                                         get_user()->fighter.moves);
 }
 
@@ -151,7 +161,7 @@ int process_cmd(const struct shell *shell, int argc, char **argv) {
 }
 
 typedef struct {
-    uint32_t reserved;
+    void* reserved;
     const struct shell *shell;
     int argc;
     char** argv;
@@ -180,8 +190,8 @@ void button_pressed(char letter) {
         return;
     }
 
-    char* c = malloc(sizeof(uint32_t) + sizeof(char));
-    c[sizeof(uint32_t)] = letter;
+    char* c = malloc(sizeof(void*) + sizeof(char));
+    c[sizeof(void*)] = letter;
     k_queue_append(&button_queue, c);
 }
 
@@ -227,7 +237,7 @@ int fight_ad_process(FightAd ad) {
 }
 
 typedef struct {
-    uint32_t reserved;
+    void* reserved;
     uint8_t data[32];
     FightAd ad;
 } FightAdMessage;
@@ -263,7 +273,7 @@ void process_queue(void) {
             return;
         }
 
-        game_controller->button_pressed(c[sizeof(uint32_t)]);
+        game_controller->button_pressed(c[sizeof(void*)]);
 
         free(c);
     }

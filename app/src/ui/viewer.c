@@ -394,7 +394,7 @@ void update_battle_scene(BattleSceneConfig* config) {
    }
 
    for (int i = 0; i < config->buttonCount; i++) {
-      change_player_action(config->buttons[i].label, i, buttons + 1);
+      change_player_action(config->buttons[i].label, i, buttons + i);
       set_button_mode(buttons + i, config->buttons[i].on);
    }
    buttonCount = config->buttonCount;
