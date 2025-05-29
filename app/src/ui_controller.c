@@ -88,7 +88,7 @@ void init_waiting_screen(void) {
 }
 
 bool buttonsOn(void) {
-        bool wentFirst = !!g_controller->me.player->challengee;
+        bool wentFirst = !g_controller->me.player->challengee;
         Fight* f = find_fight(g_controller->arena->fights, g_controller->arena->fightCount, g_controller->me.player->sessionID);
         if (!f) {
             return false;   
