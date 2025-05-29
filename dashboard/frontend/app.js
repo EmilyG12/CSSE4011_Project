@@ -1,5 +1,5 @@
 function updateLeaderboard() {
-    fetch("get_leaderboard.php")
+    fetch("test.php")
         .then(response => {
             return response.json();
         })
@@ -46,23 +46,26 @@ async function fetchLatestData() {
 
     console.log('Received data:', data);
 
-    // Receive fight data
-    // Check who wins
-    // Display game log
-    // Increment winner score by one if in table
-    // Set winner score to one if not in table
-    // Update table if required
-
-    if (data && typeof data.player_name === "string") {
+    if (data && "player_name" in data) {
           console.log("Updating Table");
           addScore(data.player_name, data.score);
           updateLeaderboard();
+    } else if ("player1" in data) {
+         console.log("Doing stuff");
+         //document.getElementById('Player1').innerText = `${data.player1?.name ?? 'none'} Distance`;
+         //document.getElementById('Player2').innerText = `${data.player2?.name ?? 'none'} Distance`;
+         document.getElementById('DistanceM1').innerText = `${data.player1?.m ?? 'none'}m`;
+         document.getElementById('DistanceM2').innerText = `${data.player2?.m ?? 'none'}m`;
+         document.getElementById('DistanceC1').innerText = `${data.player1?.cms ?? 'none'}cm`;
+         document.getElementById('DistanceC2').innerText = `${data.player2?.cms ?? 'none'}cm`;
     }
 
   } catch (err) {
     console.error('Error fetching latest data:', err);
+
   }
 }
+
 
 fetchLatestData();
 setInterval(fetchLatestData, 3000);
