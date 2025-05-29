@@ -1,0 +1,45 @@
+/ {
+    ultrasonic1: ultrasonic1 {
+        compatible = "hc-sr04";
+        status = "okay";
+        trigger-gpios = <&gpiob 2 GPIO_ACTIVE_HIGH>;
+        echo-gpios = <&gpioa 4 GPIO_ACTIVE_HIGH>;
+    };
+
+    ultrasonic2: ultrasonic2 {
+        compatible = "hc-sr04";
+        status = "okay";
+        trigger-gpios = <&gpioa 0 GPIO_ACTIVE_HIGH>;
+        echo-gpios = <&gpioa 1 GPIO_ACTIVE_HIGH>;
+    };
+};
+
+/delete-node/ &slot2_partition;
+/{
+fstab {
+  compatible = "zephyr,fstab";
+  lfs1: lfs1 {
+    compatible = "zephyr,fstab,littlefs";
+    read-size = <16>;
+    prog-size = <16>;
+    cache-size = <64>;
+    lookahead-size = <32>;
+    block-cycles = <512>;
+    partition = <&lfs1_part>;
+    mount-point = "/lfs1";
+  };
+};
+};
+
+&mx25r6435f {
+  partitions {
+  compatible = "fixed-partitions";
+  #address-cells = <1>;
+  #size-cells = <1>;
+
+  lfs1_part: partition@d8000 {
+    label = "littlefs_storage";
+          reg = <0x000d8000 DT_SIZE_M(7)>;
+  };
+};
+};
