@@ -66,7 +66,7 @@ Pokemon* get_pokemon_by_name(const char* name){
     }
 
     for (int i = 0; i < ARRAY_SIZE(all_pokemon); i++){
-        if (!strcmp(all_pokemon[i].name, name)){
+        if (!strncmp(all_pokemon[i].name, name, strlen(name))){
             return &all_pokemon[i];
         }
     }

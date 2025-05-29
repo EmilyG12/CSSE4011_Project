@@ -24,7 +24,9 @@ void set_user_name(const char* name){
 void set_user_fighter(int fighter, char moves[4]){
     user_data.fighter.id = fighter;
     for (int i = 0; i < 4; i++){
-      user_data.fighter.moves[i] = moves[i];
+        user_data.fighter.moves[i] = moves[i]
+              ? moves[i]
+              : get_pokemon(fighter)->legalMoves[i];
     }
 }
 

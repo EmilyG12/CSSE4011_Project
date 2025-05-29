@@ -230,6 +230,18 @@ int calculate_damage(Move* move, Pokemon* attacker, Pokemon* defender) {
     return physicalDamage + specialDamage;
 }
 
+void finalise_fight(Fight* fight, Player* winner) {
+    Player* challenger_cpy = malloc(sizeof(Player));
+    *challenger_cpy = *fight->players[0];
+
+    Player* challengee_cpy = malloc(sizeof(Player));
+    *challengee_cpy = *fight->players[1];
+
+    fight->players[0] = challenger_cpy;
+    fight->players[1] = challengee_cpy;
+    fight->winner = (winner->uuid == fight->players[0]->uuid) ? challenger_cpy : challengee_cpy;
+}
+
 int register_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int move) {
     LOG_DBG("register_move(uuid=0x%x, seq=%d, sessionID=0x%x, move=%d)",
               uuid, seq, sessionID, move);
@@ -274,8 +286,9 @@ int register_move(uint32_t uuid, uint16_t seq, uint32_t sessionID, int move) {
     Player* opponent = (fight->players[0]->uuid == known->uuid) ? fight->players[1] : fight->players[0];
     int damage = calculate_damage(m, get_pokemon(known->fighter), get_pokemon(opponent->fighter));
     opponent->hp -= damage;
+
     if (opponent->hp <= 0) {
-        fight->winner = known;
+        finalise_fight(fight, player);
     }
 
     LOG_INF("[%s: 0x%x] Performed a %s against [%s: 0x%x] dealing %d damage",
@@ -303,9 +316,9 @@ int register_fled(uint32_t uuid, uint16_t seq, uint32_t sessionID) {
     }
     player->sequenceNumber = seq;
 
-    fight->winner = player->uuid == fight->players[0]->uuid
+    finalise_fight(fight, player->uuid == fight->players[0]->uuid
             ? fight->players[1]
-            : fight->players[0];
+            : fight->players[0]);
 
     return 1;
 }
