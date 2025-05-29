@@ -120,6 +120,7 @@ int register_waiting(uint32_t uuid, uint16_t seq, const char* name) {
     Player* known = find_player_by_uuid(arena.waitingPlayers, arena.waitingCount, uuid);
     if (!known) {
         add_player(arena.waitingPlayers, &arena.waitingCount, player);
+        player->challengee = 0;
         known = find_player_by_uuid(arena.waitingPlayers, arena.waitingCount, uuid);
     }
 
@@ -193,8 +194,6 @@ int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
 
     Fight* fight = find_fight(arena.fights, arena.fightCount, sessionID);
     if (!fight) {
-        remove_player(arena.waitingPlayers, &arena.waitingCount, player);
-
         Player* challenger = find_player_by_uuid(arena.pendingPlayers, arena.pendingCount, opponentUUID);
         if (!challenger || (challenger->challengee != uuid)) {
             LOG_ERR("[%s: 0x%x] accepted invalid challenge", player->name, player->uuid);
@@ -205,6 +204,7 @@ int register_accept(uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t
         remove_player(arena.pendingPlayers, &arena.pendingCount, challenger);
         remove_player(arena.waitingPlayers, &arena.waitingCount, player);
 
+        player->challengee = 0;
         player->fighter = fighter;
         player->hp = get_pokemon(fighter)->maxHP;
         memcpy(player->moves, moves, 4);
