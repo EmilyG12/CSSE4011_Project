@@ -207,8 +207,8 @@ void ui_button_pressed(char letter) {
                     g_controller->me.player->sequenceNumber + 1,
                     opponent->uuid, 
                     sys_rand32_get(),
-                    g_controller->me.player->fighter,
-                    g_controller->me.player->moves
+                    get_user()->fighter.id,
+                    get_user()->fighter.moves
                 );
                 //uint32_t uuid, uint16_t seq, uint32_t opponentUUID, uint32_t sessionID, int fighter, char moves[4]
             } else if (mode == 2){
