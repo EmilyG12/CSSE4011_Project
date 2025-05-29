@@ -52,8 +52,6 @@ async function fetchLatestData() {
           updateLeaderboard();
     } else if ("player1" in data) {
          console.log("Doing stuff");
-         //document.getElementById('Player1').innerText = `${data.player1?.name ?? 'none'} Distance`;
-         //document.getElementById('Player2').innerText = `${data.player2?.name ?? 'none'} Distance`;
          document.getElementById('DistanceM1').innerText = `${data.player1?.m ?? 'none'}m`;
          document.getElementById('DistanceM2').innerText = `${data.player2?.m ?? 'none'}m`;
          document.getElementById('DistanceC1').innerText = `${data.player1?.cms ?? 'none'}cm`;
